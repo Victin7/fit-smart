@@ -7,79 +7,56 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #eef2ff; overflow-x: hidden; }
+        
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #0a0c10;
-            color: #eef2ff;
-            overflow-x: hidden;
-        }
-
-        /* Animações e Loadings */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
         .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 94, 0, 0.3);
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 94, 0, 0.3);
             border-top-color: #ff5e00;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin: 20px auto;
         }
-
-        .skeleton {
-            background: linear-gradient(90deg, #1e2029 25%, #2a2d3a 50%, #1e2029 75%);
-            background-size: 200% 100%;
-            animation: pulse 1.5s ease-in-out infinite;
-            border-radius: 12px;
+        .loading-text {
+            margin-top: 16px;
+            color: #ff9f6e;
+            font-weight: 500;
         }
-
-        .fade-up {
-            animation: fadeInUp 0.4s ease-out;
+        .btn-loading { position: relative; pointer-events: none; opacity: 0.7; }
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
         }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e1f2c;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #ff5e00;
-            border-radius: 10px;
-        }
-
-        .app-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px 24px 40px;
-        }
-
-        /* Navbar Premium */
+        
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
         .navbar {
             display: flex;
             justify-content: space-between;
@@ -95,23 +72,8 @@
             top: 10px;
             z-index: 100;
         }
-
-        .logo {
-            font-size: 1.9rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ff7b2c, #ff5e00);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            cursor: pointer;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
+        .logo { font-size: 1.9rem; font-weight: 800; background: linear-gradient(135deg, #ff7b2c, #ff5e00); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
+        .nav-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
         .btn-outline-light {
             background: transparent;
             border: 1px solid #ff7b2c;
@@ -122,13 +84,8 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
-        .btn-outline-light:hover {
-            background: rgba(255, 94, 0, 0.2);
-            border-color: #ff5e00;
-            transform: translateY(-2px);
-        }
-
+        .btn-outline-light:hover:not(:disabled) { background: rgba(255, 94, 0, 0.2); border-color: #ff5e00; transform: translateY(-2px); }
+        .btn-outline-light:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary {
             background: linear-gradient(105deg, #ff5e00, #ff8c42);
             border: none;
@@ -140,16 +97,8 @@
             transition: all 0.2s;
             box-shadow: 0 4px 12px rgba(255, 94, 0, 0.3);
         }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 94, 0, 0.4);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 94, 0, 0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .card {
             background: #14161f;
             border-radius: 32px;
@@ -159,27 +108,9 @@
             transition: all 0.3s;
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
-
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: #ff5e00;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 24px;
-        }
-
-        .username-badge {
-            background: #ff5e0022;
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #ffaa70;
-        }
-
+        .card:hover { transform: translateY(-4px); border-color: #ff5e00; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+        .username-badge { background: #ff5e0022; padding: 6px 12px; border-radius: 30px; font-size: 0.85rem; font-weight: 500; color: #ffaa70; }
         input, select, textarea {
             background: #1e2029;
             border: 1px solid #2d313e;
@@ -191,55 +122,14 @@
             margin-bottom: 14px;
             transition: 0.2s;
         }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #ff5e00;
-            box-shadow: 0 0 0 2px rgba(255,94,0,0.3);
-        }
-
-        /* Chat Interface */
-        .chat-container {
-            height: 400px;
-            overflow-y: auto;
-            padding: 16px;
-            background: #0f1118;
-            border-radius: 24px;
-            margin-bottom: 16px;
-        }
-
-        .message {
-            margin-bottom: 16px;
-            display: flex;
-            animation: fadeInUp 0.3s ease-out;
-        }
-
-        .message.user {
-            justify-content: flex-end;
-        }
-
-        .message.bot {
-            justify-content: flex-start;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 12px 18px;
-            border-radius: 20px;
-            word-wrap: break-word;
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #ff5e00, #ff8c42);
-            color: white;
-        }
-
-        .message.bot .message-content {
-            background: #1e2029;
-            border: 1px solid #ff5e00;
-        }
-
-        /* Badges e Conquistas */
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #ff5e00; box-shadow: 0 0 0 2px rgba(255,94,0,0.3); }
+        .chat-container { height: 400px; overflow-y: auto; padding: 16px; background: #0f1118; border-radius: 24px; margin-bottom: 16px; }
+        .message { margin-bottom: 16px; display: flex; animation: fadeInUp 0.3s ease-out; }
+        .message.user { justify-content: flex-end; }
+        .message.bot { justify-content: flex-start; }
+        .message-content { max-width: 70%; padding: 12px 18px; border-radius: 20px; word-wrap: break-word; white-space: pre-wrap; }
+        .message.user .message-content { background: linear-gradient(135deg, #ff5e00, #ff8c42); color: white; }
+        .message.bot .message-content { background: #1e2029; border: 1px solid #ff5e00; }
         .badge {
             display: inline-flex;
             align-items: center;
@@ -251,40 +141,11 @@
             margin: 4px;
             font-size: 0.85rem;
         }
-
-        .badge.locked {
-            opacity: 0.4;
-            filter: grayscale(0.5);
-        }
-
-        .level-bar {
-            background: #2a2d3a;
-            border-radius: 20px;
-            height: 8px;
-            overflow: hidden;
-            margin: 12px 0;
-        }
-
-        .level-progress {
-            background: linear-gradient(90deg, #ff5e00, #ff8c42);
-            height: 100%;
-            transition: width 0.5s ease;
-        }
-
-        .timer-btn {
-            background: #ff5e00;
-            border: none;
-            border-radius: 60px;
-            padding: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .timer-btn:hover {
-            transform: scale(1.02);
-        }
-
+        .badge.locked { opacity: 0.4; filter: grayscale(0.5); }
+        .level-bar { background: #2a2d3a; border-radius: 20px; height: 8px; overflow: hidden; margin: 12px 0; }
+        .level-progress { background: linear-gradient(90deg, #ff5e00, #ff8c42); height: 100%; transition: width 0.5s ease; }
+        .timer-btn { background: #ff5e00; border: none; border-radius: 60px; padding: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .timer-btn:hover:not(:disabled) { transform: scale(1.02); }
         .notification {
             position: fixed;
             top: 80px;
@@ -297,25 +158,25 @@
             animation: fadeInUp 0.3s ease-out;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-
+        .notification.error { background: #dc3545; }
+        .notification.success { background: #28a745; }
         @media (max-width: 680px) {
             .app-container { padding: 16px; }
             .navbar { flex-direction: column; gap: 12px; }
             .message-content { max-width: 85%; }
         }
-
         .hide { display: none; }
         .error-text { color: #ff8080; font-size: 0.8rem; margin-top: -8px; margin-bottom: 12px; }
-
-        /* Quiz Dinâmico */
-        .quiz-question {
-            animation: fadeInUp 0.3s ease-out;
-        }
+        .quiz-question { animation: fadeInUp 0.3s ease-out; }
     </style>
 </head>
 <body>
 <div class="app-container" id="appRoot">
-    <!-- Tela de Autenticação -->
+    <div id="loadingOverlay" class="loading-overlay hide">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Carregando...</div>
+    </div>
+
     <div id="authScreen">
         <div class="navbar">
             <div class="logo">⚡ BOSSFIT AI</div>
@@ -328,7 +189,9 @@
             <div id="loginForm">
                 <h2 style="margin-bottom: 20px;">Acessar <span style="color:#ff5e00;">BOSSFIT AI</span></h2>
                 <input type="email" id="loginEmail" placeholder="seu@email.com">
+                <div class="error-text" id="loginEmailError"></div>
                 <input type="password" id="loginPassword" placeholder="senha">
+                <div class="error-text" id="loginPasswordError"></div>
                 <button class="btn-primary" id="doEmailLogin" style="width:100%">Entrar</button>
                 <button class="btn-outline-light" id="googleLoginBtn" style="width:100%; margin-top:12px;">🔐 Entrar com Google</button>
                 <p style="margin-top: 16px; text-align:center"><a href="#" id="forgotPassLink" style="color:#ff9f6e;">Esqueci a senha</a></p>
@@ -336,14 +199,15 @@
             <div id="signupForm" class="hide">
                 <h2>Criar conta</h2>
                 <input type="email" id="signupEmail" placeholder="Email">
+                <div class="error-text" id="signupEmailError"></div>
                 <input type="password" id="signupPassword" placeholder="Senha (mínimo 6)">
+                <div class="error-text" id="signupPasswordError"></div>
                 <button class="btn-primary" id="doSignup">Cadastrar</button>
                 <div id="signupError" class="error-text"></div>
             </div>
         </div>
     </div>
 
-    <!-- Tela Principal -->
     <div id="mainApp" class="hide">
         <div class="navbar">
             <div class="logo">🏋️ BOSSFIT AI</div>
@@ -354,7 +218,6 @@
             </div>
         </div>
 
-        <!-- Stats Cards -->
         <div class="grid-2">
             <div class="card">
                 <h3>📊 Seu Progresso</h3>
@@ -374,14 +237,11 @@
             </div>
         </div>
 
-        <!-- Gráficos -->
         <div class="card">
             <h3>📈 Evolução</h3>
             <canvas id="weightChartCanvas" height="120"></canvas>
-            <canvas id="frequencyChartCanvas" height="120" style="margin-top: 20px;"></canvas>
         </div>
 
-        <!-- Treino Inteligente do Dia -->
         <div class="card">
             <h3>🏋️ Treino Inteligente do Dia</h3>
             <div id="workoutOfDay"></div>
@@ -404,7 +264,6 @@
             </div>
         </div>
 
-        <!-- Chat com IA Real -->
         <div class="card">
             <h3>🤖 Coach IA (Chat Inteligente)</h3>
             <div class="chat-container" id="chatContainer">
@@ -419,7 +278,6 @@
         </div>
     </div>
 
-    <!-- Modal Username -->
     <div id="usernameModal" class="hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; align-items:center; justify-content:center; z-index:1000;">
         <div class="card" style="max-width:400px;">
             <h3>Escolha seu @username único</h3>
@@ -429,7 +287,6 @@
         </div>
     </div>
 
-    <!-- Quiz Dinâmico Avançado -->
     <div id="quizModal" class="hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); align-items:center; justify-content:center; z-index:1100; overflow-y:auto;">
         <div class="card" style="max-width:600px; max-height:90vh; overflow-y:auto;">
             <h2>📋 Quiz Inteligente BOSSFIT</h2>
@@ -440,24 +297,55 @@
 </div>
 
 <script type="module">
-    // Firebase e Lógica Principal
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, query, where, getDocs, Timestamp, increment, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, collection, Timestamp, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
-    // Configuração Firebase (substitua com suas credenciais)
+    // Firebase Config
     const firebaseConfig = {
-        apiKey: "AIzaSyB_2z4R5cEeXxampleReplaceWithRealKey",
-        authDomain: "bossfit-12345.firebaseapp.com",
-        projectId: "bossfit-12345",
-        storageBucket: "bossfit-12345.appspot.com",
-        messagingSenderId: "123456789012",
-        appId: "1:123456789012:web:abcdef123456"
+        apiKey: "AIzaSyD_vqgrdyTotubZaxa2rdUYaoUaZC1uCfk",
+        authDomain: "fit-smart-65928.firebaseapp.com",
+        projectId: "fit-smart-65928",
+        storageBucket: "fit-smart-65928.appspot.com",
+        messagingSenderId: "166572903350",
+        appId: "1:166572903350:web:24050ab69058095f708f17"
     };
     
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    
+    // ========== FIREBASE SECURITY RULES (OTIMIZADAS PARA ESCALA) ==========
+    /*
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        // Coleção users: acesso restrito ao próprio usuário
+        match /users/{userId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Coleção usernames: leitura pública para verificação, escrita controlada
+        match /usernames/{username} {
+          allow read: if true;
+          allow create: if request.auth != null && 
+            request.resource.data.uid == request.auth.uid &&
+            request.resource.data.username == username;
+          allow update, delete: if false;
+        }
+        
+        // Coleção stats (para futuro): acesso restrito
+        match /stats/{userId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Coleção workouts (para futuro): acesso restrito
+        match /workouts/{userId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+    */
     
     // Estado Global
     let currentUser = null;
@@ -465,9 +353,11 @@
     let currentQuizStep = 0;
     let quizAnswers = {};
     let weightChart = null;
-    let frequencyChart = null;
+    let activeTimer = null;
+    let isProcessing = false;
+    let isLoadingWorkout = false; // 🔴 #5: Evitar chamadas duplicadas
     
-    // Sistema de Conquistas
+    // Conquistas
     const achievements = [
         { id: 'first_workout', name: '🏅 Primeiro Passo', description: 'Complete seu primeiro treino', xp: 50, icon: '🎯' },
         { id: '7day_streak', name: '🔥 Semana de Fogo', description: '7 dias consecutivos', xp: 100, icon: '⚡' },
@@ -475,65 +365,205 @@
         { id: '10_workouts', name: '📈 Constância', description: '10 treinos completados', xp: 150, icon: '⭐' }
     ];
     
-    // Funções Auxiliares
+    // ========== UTILITÁRIOS ==========
+    function showLoading(show, text = 'Carregando...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const loadingText = overlay?.querySelector('.loading-text');
+        if (overlay) {
+            if (show) {
+                if (loadingText) loadingText.textContent = text;
+                overlay.classList.remove('hide');
+            } else {
+                overlay.classList.add('hide');
+            }
+        }
+    }
+    
     function showNotification(message, type = 'success') {
         const notif = document.createElement('div');
-        notif.className = 'notification';
+        notif.className = `notification ${type}`;
         notif.textContent = message;
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 3000);
     }
     
-    async function checkAndAwardAchievements(uid, stats) {
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        const currentAchievements = userSnap.data()?.achievements || [];
-        let newAchievements = [];
-        let xpGain = 0;
-        
-        if (stats.totalWorkouts >= 1 && !currentAchievements.includes('first_workout')) {
-            newAchievements.push('first_workout');
-            xpGain += 50;
-            showNotification('🏅 Conquista desbloqueada: Primeiro Passo! +50 XP');
-        }
-        if (stats.streak >= 7 && !currentAchievements.includes('7day_streak')) {
-            newAchievements.push('7day_streak');
-            xpGain += 100;
-            showNotification('🔥 Conquista desbloqueada: Semana de Fogo! +100 XP');
-        }
-        if (stats.streak >= 30 && !currentAchievements.includes('30day_streak')) {
-            newAchievements.push('30day_streak');
-            xpGain += 500;
-            showNotification('💪 Conquista desbloqueada: Lenda! +500 XP');
-        }
-        if (stats.totalWorkouts >= 10 && !currentAchievements.includes('10_workouts')) {
-            newAchievements.push('10_workouts');
-            xpGain += 150;
-            showNotification('📈 Conquista desbloqueada: Constância! +150 XP');
-        }
-        
-        if (newAchievements.length > 0) {
-            await updateDoc(userRef, {
-                achievements: arrayUnion(...newAchievements),
-                xp: increment(xpGain)
-            });
+    function setButtonLoading(button, isLoading) {
+        if (!button) return;
+        if (isLoading) {
+            button.classList.add('btn-loading');
+            button.disabled = true;
+        } else {
+            button.classList.remove('btn-loading');
+            button.disabled = false;
         }
     }
     
-    // Geração Inteligente de Treino
+    // 🔴 #4: Sanitização completa para prevenir XSS
+    function sanitizeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function escapeHtml(text) {
+        return sanitizeHtml(text);
+    }
+    
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+    
+    function validateWeight(weight) {
+        const w = parseFloat(weight);
+        return !isNaN(w) && w > 20 && w < 500;
+    }
+    
+    function validateHeight(height) {
+        const h = parseFloat(height);
+        return !isNaN(h) && h > 50 && h < 300;
+    }
+    
+    function safeNumber(value, defaultValue = 0) {
+        const num = parseFloat(value);
+        return isNaN(num) ? defaultValue : num;
+    }
+    
+    // 🔴 #1: Exibição segura de peso
+    function formatWeight(weight) {
+        if (weight === undefined || weight === null || weight === '--') return '--';
+        const num = parseFloat(weight);
+        return isNaN(num) ? '--' : num.toFixed(1);
+    }
+    
+    function getFirebaseErrorMessage(error) {
+        switch (error.code) {
+            case 'auth/email-already-in-use': return 'Este email já está cadastrado.';
+            case 'auth/invalid-email': return 'Email inválido.';
+            case 'auth/weak-password': return 'Senha muito fraca. Use pelo menos 6 caracteres.';
+            case 'auth/user-not-found': return 'Usuário não encontrado.';
+            case 'auth/wrong-password': return 'Senha incorreta.';
+            case 'auth/network-request-failed': return 'Erro de rede. Verifique sua conexão.';
+            case 'auth/too-many-requests': return 'Muitas tentativas. Tente novamente mais tarde.';
+            case 'auth/popup-closed-by-user': return 'Janela de login fechada. Tente novamente.';
+            default: return error.message || 'Ocorreu um erro. Tente novamente.';
+        }
+    }
+    
+    function isQuizComplete(quiz) {
+        if (!quiz) return false;
+        const requiredFields = ['objetivo', 'nivel', 'frequencia', 'local', 'idade', 'sexo', 'tempoTreino', 'focoMuscular', 'altura', 'peso'];
+        return requiredFields.every(field => quiz[field] !== undefined && quiz[field] !== null);
+    }
+    
+    // 🔴 #7: Verificação segura de autenticação
+    function requireAuth(actionName) {
+        if (!currentUser || !currentUser.uid) {
+            console.warn(`Ação "${actionName}" bloqueada: usuário não autenticado`);
+            showNotification('Faça login para continuar', 'error');
+            return false;
+        }
+        return true;
+    }
+    
+    function validateQuizBeforeAction() {
+        if (!userData?.quiz || !isQuizComplete(userData.quiz)) {
+            showNotification('⚠️ Complete o quiz antes de gerar treinos!', 'error');
+            return false;
+        }
+        return true;
+    }
+    
+    // ========== CHAT IA MELHORADO ==========
+    async function askAI(question, userContext) {
+        if (!question || question.trim() === '') {
+            return "Por favor, digite uma pergunta para que eu possa ajudar você! 💪";
+        }
+        
+        const lowerQuestion = question.toLowerCase();
+        const hasQuiz = userContext?.quiz && isQuizComplete(userContext.quiz);
+        
+        if (lowerQuestion.includes('comer') || lowerQuestion.includes('dieta') || lowerQuestion.includes('alimentação')) {
+            if (hasQuiz) {
+                const weight = safeNumber(userContext?.currentWeight, 70);
+                const calories = Math.round(weight * (userContext.quiz.objetivo === 'emagrecimento' ? 30 : 35));
+                const protein = Math.round(weight * (userContext.quiz.objetivo === 'hipertrofia' ? 2.2 : 1.8));
+                return `🍽️ **Plano alimentar personalizado para ${userContext.quiz.objetivo}:**\n\n` +
+                       `📊 **Metas diárias:**\n` +
+                       `• Calorias: ${calories} kcal\n` +
+                       `• Proteína: ${protein}g\n` +
+                       `• Carboidratos: ${Math.round(calories * 0.5 / 4)}g\n` +
+                       `• Gorduras: ${Math.round(calories * 0.25 / 9)}g\n\n` +
+                       `🥑 **Pré-treino recomendado:** Banana + Café + Aveia\n` +
+                       `🍗 **Pós-treino:** Whey protein + Batata doce\n` +
+                       `💧 **Hidratação:** 2-3L de água por dia`;
+            }
+            return "🍽️ Para recomendações alimentares personalizadas, complete seu perfil no quiz!";
+        }
+        
+        if (lowerQuestion.includes('treino') || lowerQuestion.includes('exercício') || lowerQuestion.includes('musculação')) {
+            if (hasQuiz && userContext?.dailyWorkout) {
+                const workout = userContext.dailyWorkout;
+                return `💪 **Seu treino de hoje (${userContext.quiz.objetivo}):**\n\n` +
+                       `🏋️ **Exercícios:** ${workout.exercises.join(', ')}\n` +
+                       `📊 **${workout.sets} séries x ${workout.reps} repetições**\n\n` +
+                       `✨ **Dicas para evoluir:**\n` +
+                       `• Aqueça por 10 minutos antes\n` +
+                       `• Descanse 60-90 segundos entre séries\n` +
+                       `• Aumente a carga quando conseguir fazer todas repetições\n` +
+                       `• Mantenha a forma correta para evitar lesões`;
+            }
+            return "💪 Complete o quiz para receber treinos personalizados para seu objetivo!";
+        }
+        
+        if (lowerQuestion.includes('progresso') || lowerQuestion.includes('evolução')) {
+            if (userContext?.weightHistory?.length > 0) {
+                const firstWeight = safeNumber(userContext.weightHistory[0]?.valor, 70);
+                const currentWeight = safeNumber(userContext.currentWeight, 70);
+                const difference = currentWeight - firstWeight;
+                const trend = difference < 0 ? `perdeu ${Math.abs(difference).toFixed(1)}kg` : 
+                              difference > 0 ? `ganhou ${difference.toFixed(1)}kg` : 'manteve o peso';
+                return `📈 **Seu progresso:**\n\n` +
+                       `• Peso inicial: ${firstWeight}kg\n` +
+                       `• Peso atual: ${currentWeight}kg\n` +
+                       `• Você ${trend} desde o início!\n` +
+                       `• Total de treinos: ${userContext.totalWorkouts || 0}\n` +
+                       `• Streak atual: ${userContext.streak || 0} dias\n\n` +
+                       `Continue consistente! O progresso vem com disciplina. 💪`;
+            }
+            return "📊 Complete alguns treinos para começarmos a acompanhar seu progresso!";
+        }
+        
+        if (hasQuiz) {
+            return `🤖 **Coach BOSSFIT AI**\n\n` +
+                   `Baseado no seu perfil (${userContext.quiz.objetivo}, nível ${userContext.quiz.nivel}):\n\n` +
+                   `🎯 **Foco da semana:** Mantenha a consistência nos treinos\n` +
+                   `💡 **Dica principal:** Descanse adequadamente e mantenha a hidratação\n` +
+                   `📅 **Próximo objetivo:** Complete mais ${7 - ((userContext.streak || 0) % 7)} dias para ganhar um badge especial!\n\n` +
+                   `Tem alguma dúvida específica sobre treino, dieta ou progresso?`;
+        }
+        
+        return "🤖 Complete o quiz para receber recomendações personalizadas! Clique no botão para começar.";
+    }
+    
+    // ========== FUNÇÕES DE TREINO ==========
     function generateIntelligentWorkout(quiz, history = [], adaptationFactor = 1.0) {
+        if (!quiz) return null;
+        
         const workouts = {
-            'push': ['Supino Reto', 'Desenvolvimento', 'Tríceps Corda', 'Paralelas'],
-            'pull': ['Puxada Frontal', 'Remada Curvada', 'Rosca Direta', 'Encolhimento'],
-            'legs': ['Agachamento Livre', 'Leg Press', 'Cadeira Extensora', 'Mesa Flexora'],
-            'fullbody_casa': ['Flexões', 'Agachamento', 'Prancha', 'Afundo', 'Abdominal']
+            'push': ['Supino Reto', 'Desenvolvimento', 'Tríceps Corda', 'Paralelas', 'Crucifixo'],
+            'pull': ['Puxada Frontal', 'Remada Curvada', 'Rosca Direta', 'Encolhimento', 'Pullover'],
+            'legs': ['Agachamento Livre', 'Leg Press', 'Cadeira Extensora', 'Mesa Flexora', 'Panturrilha'],
+            'fullbody_casa': ['Flexões', 'Agachamento', 'Prancha', 'Afundo', 'Abdominal', 'Polichinelos']
         };
         
         let selectedWorkout;
-        const frequency = quiz.frequencia || 3;
         const dayOfWeek = new Date().getDay();
+        const local = quiz.local;
+        const tempoTreino = safeNumber(quiz.tempoTreino, 45);
         
-        if (quiz.local === 'casa') {
+        if (local === 'casa') {
             selectedWorkout = workouts.fullbody_casa;
         } else {
             const split = dayOfWeek % 3;
@@ -545,11 +575,11 @@
         let sets = quiz.nivel === 'iniciante' ? 3 : (quiz.nivel === 'intermediario' ? 4 : 5);
         let reps = quiz.objetivo === 'hipertrofia' ? '8-12' : (quiz.objetivo === 'emagrecimento' ? '15-20' : '12-15');
         
-        // Adaptação baseada em feedback
         sets = Math.max(2, Math.min(6, Math.floor(sets * adaptationFactor)));
+        const exercisesCount = tempoTreino <= 30 ? 4 : 5;
         
         return {
-            exercises: selectedWorkout,
+            exercises: selectedWorkout.slice(0, exercisesCount),
             sets: sets,
             reps: reps,
             date: new Date().toISOString(),
@@ -557,136 +587,266 @@
         };
     }
     
+    function isSameDay(date1, date2) {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+        return d1.toDateString() === d2.toDateString();
+    }
+    
     async function getDailyWorkout(uid) {
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        const user = userSnap.data();
-        const today = new Date().toDateString();
+        if (!uid) return null;
         
-        if (user.dailyWorkout && user.dailyWorkout.date === today) {
-            return user.dailyWorkout;
+        try {
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (!userSnap.exists()) {
+                console.warn('Documento do usuário não encontrado');
+                return null;
+            }
+            
+            const user = userSnap.data();
+            
+            if (!user?.quiz || !isQuizComplete(user.quiz)) return null;
+            
+            const today = new Date();
+            
+            if (user.dailyWorkout?.date && isSameDay(user.dailyWorkout.date, today)) {
+                return user.dailyWorkout;
+            }
+            
+            const newWorkout = generateIntelligentWorkout(user.quiz, user.workoutHistory || [], user.adaptationFactor || 1.0);
+            if (newWorkout) {
+                await updateDoc(userRef, { dailyWorkout: newWorkout });
+                return newWorkout;
+            }
+            return null;
+        } catch (error) {
+            console.error('Erro ao gerar treino diário:', error);
+            return null;
         }
-        
-        const newWorkout = generateIntelligentWorkout(user.quiz, user.workoutHistory || [], user.adaptationFactor || 1.0);
-        await updateDoc(userRef, {
-            dailyWorkout: newWorkout
-        });
-        return newWorkout;
     }
     
     async function completeWorkout() {
-        if (!currentUser) return;
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        const user = userSnap.data();
+        if (!requireAuth('completeWorkout')) return;
+        if (isProcessing) return;
+        isProcessing = true;
         
-        const newStreak = (user.streak || 0) + 1;
-        const newTotal = (user.totalWorkouts || 0) + 1;
-        const newXP = (user.xp || 0) + 25;
+        const completeBtn = document.getElementById('completeWorkoutBtn');
+        setButtonLoading(completeBtn, true);
         
-        await updateDoc(userRef, {
-            streak: newStreak,
-            totalWorkouts: newTotal,
-            xp: newXP,
-            lastWorkoutDate: new Date().toISOString(),
-            workoutHistory: arrayUnion({
-                date: new Date().toISOString(),
-                workout: user.dailyWorkout
-            })
-        });
-        
-        await checkAndAwardAchievements(currentUser.uid, { streak: newStreak, totalWorkouts: newTotal });
-        showNotification('✅ Treino concluído! +25 XP');
-        loadUserData();
-        displayWorkoutOfDay();
-    }
-    
-    // Chat com IA (Simula OpenAI - Pronto para integração real)
-    async function askAI(question, userContext) {
-        // Aqui você integraria a API real da OpenAI
-        // Exemplo: const response = await fetch('https://api.openai.com/v1/chat/completions', {...})
-        
-        // Simulação de IA contextual
-        const context = `Usuário: ${userContext.quiz?.objetivo}, nível ${userContext.quiz?.nivel}, peso ${userContext.currentWeight}kg`;
-        const responses = {
-            default: `Com base no seu perfil (${context}), recomendo: mantenha consistência nos treinos e hidrate-se bem!`,
-            dieta: `Para seu objetivo de ${userContext.quiz?.objetivo}, consuma aproximadamente ${Math.round(userContext.currentWeight * 35)} calorias/dia. Proteína: ${Math.round(userContext.currentWeight * 2)}g.`,
-            treino: `Seu treino atual tem ${userContext.dailyWorkout?.sets} séries. Aumente progressivamente a carga!`
-        };
-        
-        if (question.includes('comer') || question.includes('dieta')) return responses.dieta;
-        if (question.includes('treino') || question.includes('exercício')) return responses.treino;
-        return responses.default;
-    }
-    
-    // UI Updates
-    async function loadUserData() {
-        if (!currentUser) return;
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        userData = userSnap.data();
-        
-        if (userData) {
-            document.getElementById('profileUsernameDisplay').innerHTML = `@${userData.username || 'user'}`;
-            document.getElementById('imcValue').innerHTML = `IMC: ${userData.imc || '--'}`;
-            document.getElementById('weightValue').innerHTML = `Peso: ${userData.currentWeight || '--'} kg`;
-            document.getElementById('streakCount').innerHTML = `${userData.streak || 0} dias consecutivos`;
-            document.getElementById('totalWorkouts').innerHTML = userData.totalWorkouts || 0;
-            document.getElementById('xpTotal').innerHTML = userData.xp || 0;
+        try {
+            const userRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userRef);
             
-            const level = Math.floor((userData.xp || 0) / 100) + 1;
-            const xpProgress = ((userData.xp || 0) % 100);
-            document.getElementById('levelDisplay').innerHTML = `Nível ${level}`;
-            document.getElementById('xpProgress').style.width = `${xpProgress}%`;
+            if (!userSnap.exists()) {
+                throw new Error('Dados do usuário não encontrados');
+            }
             
-            // Badges
-            const badgesContainer = document.getElementById('badgesContainer');
-            badgesContainer.innerHTML = '';
-            achievements.forEach(ach => {
-                const unlocked = userData.achievements?.includes(ach.id);
-                badgesContainer.innerHTML += `<div class="badge ${unlocked ? '' : 'locked'}">${ach.icon} ${ach.name} ${unlocked ? '✓' : '🔒'}</div>`;
+            const user = userSnap.data();
+            const newStreak = (user.streak || 0) + 1;
+            const newTotal = (user.totalWorkouts || 0) + 1;
+            const newXP = (user.xp || 0) + 25;
+            
+            await updateDoc(userRef, {
+                streak: newStreak,
+                totalWorkouts: newTotal,
+                xp: newXP,
+                lastWorkoutDate: new Date().toISOString(),
+                workoutHistory: arrayUnion({
+                    date: new Date().toISOString(),
+                    workout: user.dailyWorkout
+                })
             });
             
-            // Gráficos
-            if (userData.weightHistory?.length) drawCharts(userData.weightHistory);
+            await checkAndAwardAchievements(currentUser.uid, { streak: newStreak, totalWorkouts: newTotal });
+            showNotification('✅ Treino concluído! +25 XP', 'success');
+            await loadUserData();
+            await displayWorkoutOfDay();
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('Erro ao salvar treino', 'error');
+        } finally {
+            isProcessing = false;
+            setButtonLoading(completeBtn, false);
+        }
+    }
+    
+    async function checkAndAwardAchievements(uid, stats) {
+        try {
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
             
-            // Nutrição
-            const calories = Math.round((userData.currentWeight || 70) * 35);
-            const protein = Math.round((userData.currentWeight || 70) * 2);
-            document.getElementById('nutritionPlan').innerHTML = `
-                <strong>🔥 Calorias diárias:</strong> ${calories} kcal<br>
-                <strong>💪 Proteína:</strong> ${protein}g<br>
-                <strong>🥑 Pré-treino:</strong> Banana + Café + Aveia<br>
-                <strong>🍗 Pós-treino:</strong> Whey + Batata Doce
-            `;
+            if (!userSnap.exists()) return;
+            
+            const currentAchievements = userSnap.data()?.achievements || [];
+            let newAchievements = [];
+            let xpGain = 0;
+            
+            if (stats.totalWorkouts >= 1 && !currentAchievements.includes('first_workout')) {
+                newAchievements.push('first_workout');
+                xpGain += 50;
+                showNotification('🏅 Conquista: Primeiro Passo! +50 XP', 'success');
+            }
+            if (stats.streak >= 7 && !currentAchievements.includes('7day_streak')) {
+                newAchievements.push('7day_streak');
+                xpGain += 100;
+                showNotification('🔥 Conquista: Semana de Fogo! +100 XP', 'success');
+            }
+            if (stats.streak >= 30 && !currentAchievements.includes('30day_streak')) {
+                newAchievements.push('30day_streak');
+                xpGain += 500;
+                showNotification('💪 Conquista: Lenda! +500 XP', 'success');
+            }
+            if (stats.totalWorkouts >= 10 && !currentAchievements.includes('10_workouts')) {
+                newAchievements.push('10_workouts');
+                xpGain += 150;
+                showNotification('📈 Conquista: Constância! +150 XP', 'success');
+            }
+            
+            if (newAchievements.length > 0) {
+                await updateDoc(userRef, {
+                    achievements: arrayUnion(...newAchievements),
+                    xp: increment(xpGain)
+                });
+            }
+        } catch (error) {
+            console.error('Erro ao verificar conquistas:', error);
+        }
+    }
+    
+    async function loadUserData() {
+        if (!currentUser?.uid) return;
+        
+        try {
+            const userRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (!userSnap.exists()) {
+                console.warn('Documento do usuário não encontrado');
+                return;
+            }
+            
+            userData = userSnap.data();
+            
+            if (userData) {
+                document.getElementById('profileUsernameDisplay').innerHTML = `@${userData.username || 'user'}`;
+                document.getElementById('imcValue').innerHTML = `IMC: ${userData.imc || '--'}`;
+                // 🔴 #1: Exibição correta do peso
+                document.getElementById('weightValue').innerHTML = `Peso: ${formatWeight(userData.currentWeight)} kg`;
+                document.getElementById('streakCount').innerHTML = `${userData.streak || 0} dias consecutivos`;
+                document.getElementById('totalWorkouts').innerHTML = userData.totalWorkouts || 0;
+                document.getElementById('xpTotal').innerHTML = userData.xp || 0;
+                
+                const level = Math.floor((userData.xp || 0) / 100) + 1;
+                const xpProgress = ((userData.xp || 0) % 100);
+                document.getElementById('levelDisplay').innerHTML = `Nível ${level}`;
+                document.getElementById('xpProgress').style.width = `${xpProgress}%`;
+                
+                const badgesContainer = document.getElementById('badgesContainer');
+                if (badgesContainer) {
+                    badgesContainer.innerHTML = '';
+                    achievements.forEach(ach => {
+                        const unlocked = userData.achievements?.includes(ach.id);
+                        badgesContainer.innerHTML += `<div class="badge ${unlocked ? '' : 'locked'}">${ach.icon} ${ach.name} ${unlocked ? '✓' : '🔒'}</div>`;
+                    });
+                }
+                
+                if (userData.weightHistory?.length) drawCharts(userData.weightHistory);
+                
+                const weight = safeNumber(userData.currentWeight, 70);
+                const calories = Math.round(weight * (userData.quiz?.objetivo === 'emagrecimento' ? 30 : 35));
+                const protein = Math.round(weight * (userData.quiz?.objetivo === 'hipertrofia' ? 2.2 : 1.8));
+                document.getElementById('nutritionPlan').innerHTML = `
+                    <strong>🔥 Calorias diárias:</strong> ${calories} kcal<br>
+                    <strong>💪 Proteína:</strong> ${protein}g<br>
+                    <strong>🥑 Pré-treino:</strong> Banana + Café + Aveia<br>
+                    <strong>🍗 Pós-treino:</strong> Whey + Batata Doce
+                `;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            showNotification('Erro ao carregar dados do usuário', 'error');
         }
     }
     
     function drawCharts(weightHistory) {
-        const ctxWeight = document.getElementById('weightChartCanvas').getContext('2d');
+        const canvas = document.getElementById('weightChartCanvas');
+        if (!canvas) return;
+        
+        const validHistory = (weightHistory || []).filter(w => w && typeof w.valor === 'number' && !isNaN(w.valor));
+        const labels = validHistory.map((_, i) => i + 1);
+        const data = validHistory.map(w => w.valor);
+        
+        const ctxWeight = canvas.getContext('2d');
         if (weightChart) weightChart.destroy();
+        
+        if (data.length === 0) {
+            weightChart = new Chart(ctxWeight, {
+                type: 'line',
+                data: {
+                    labels: ['Início'],
+                    datasets: [{ label: 'Evolução (kg)', data: [0], borderColor: '#ff5e00', tension: 0.3 }]
+                },
+                options: { responsive: true, maintainAspectRatio: true }
+            });
+            return;
+        }
+        
         weightChart = new Chart(ctxWeight, {
             type: 'line',
             data: {
-                labels: weightHistory.map((_, i) => i + 1),
-                datasets: [{ label: 'Evolução (kg)', data: weightHistory.map(w => w.valor), borderColor: '#ff5e00', tension: 0.3 }]
-            }
+                labels: labels,
+                datasets: [{ label: 'Evolução (kg)', data: data, borderColor: '#ff5e00', tension: 0.3 }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
         });
     }
     
+    // 🔴 #5: Otimização para evitar chamadas duplicadas
     async function displayWorkoutOfDay() {
-        const workout = await getDailyWorkout(currentUser.uid);
-        const container = document.getElementById('workoutOfDay');
-        container.innerHTML = `
-            <p><strong>🏋️ Treino de hoje:</strong></p>
-            <p>📌 ${workout.sets} séries x ${workout.reps} repetições</p>
-            <ul>${workout.exercises.map(ex => `<li>${ex}</li>`).join('')}</ul>
-            <button id="completeWorkoutBtn" class="btn-primary" style="margin-top:12px;">✅ Marcar como concluído</button>
-        `;
-        document.getElementById('completeWorkoutBtn')?.addEventListener('click', completeWorkout);
+        if (!currentUser?.uid) return;
+        if (isLoadingWorkout) return;
+        
+        isLoadingWorkout = true;
+        
+        try {
+            if (!userData?.quiz || !isQuizComplete(userData.quiz)) {
+                const container = document.getElementById('workoutOfDay');
+                if (container) {
+                    container.innerHTML = `<p style="color: #ffaa70;">⚠️ Complete o quiz para gerar seu treino personalizado!</p>`;
+                }
+                return;
+            }
+            
+            const workout = await getDailyWorkout(currentUser.uid);
+            if (!workout) {
+                const container = document.getElementById('workoutOfDay');
+                if (container) {
+                    container.innerHTML = `<p>Erro ao carregar treino. Tente novamente.</p>`;
+                }
+                return;
+            }
+            
+            const container = document.getElementById('workoutOfDay');
+            if (container) {
+                container.innerHTML = `
+                    <p><strong>🏋️ Treino de hoje:</strong></p>
+                    <p>📌 ${workout.sets} séries x ${workout.reps} repetições</p>
+                    <ul>${workout.exercises.map(ex => `<li>${escapeHtml(ex)}</li>`).join('')}</ul>
+                    <button id="completeWorkoutBtn" class="btn-primary" style="margin-top:12px;">✅ Marcar como concluído</button>
+                `;
+                const completeBtn = document.getElementById('completeWorkoutBtn');
+                if (completeBtn) completeBtn.addEventListener('click', completeWorkout);
+            }
+        } catch (error) {
+            console.error('Erro ao exibir treino:', error);
+        } finally {
+            isLoadingWorkout = false;
+        }
     }
     
-    // Quiz Dinâmico
+    // ========== QUIZ COM TIPAGEM CORRETA ==========
     const quizQuestions = [
         { id: 'objetivo', type: 'select', label: 'Qual seu objetivo principal?', options: ['emagrecimento', 'hipertrofia', 'condicionamento'] },
         { id: 'nivel', type: 'select', label: 'Seu nível de experiência?', options: ['iniciante', 'intermediario', 'avancado'] },
@@ -708,224 +868,528 @@
             return;
         }
         
-        let html = `<div class="quiz-question"><h3>${q.label}</h3>`;
+        let html = `<div class="quiz-question"><h3>${escapeHtml(q.label)}</h3>`;
         if (q.type === 'select') {
             html += `<select id="quizAnswer" class="quiz-input">`;
-            q.options.forEach(opt => html += `<option value="${opt}">${opt}</option>`);
+            q.options.forEach(opt => html += `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`);
             html += `</select>`;
         } else {
-            html += `<input type="number" id="quizAnswer" class="quiz-input" min="${q.min}" max="${q.max}" placeholder="${q.label}">`;
+            html += `<input type="number" id="quizAnswer" class="quiz-input" min="${q.min}" max="${q.max}" placeholder="${escapeHtml(q.label)}">`;
         }
         html += `</div>`;
         container.innerHTML = html;
     }
     
     async function finishQuiz() {
-        const imc = (quizAnswers.peso / ((quizAnswers.altura / 100) ** 2)).toFixed(1);
-        const userRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userRef, {
-            quiz: quizAnswers,
-            imc: imc,
-            currentWeight: quizAnswers.peso,
-            weightHistory: [{ data: new Date().toISOString(), valor: quizAnswers.peso }],
-            adaptationFactor: 1.0,
-            xp: 100,
-            achievements: []
-        });
+        if (!requireAuth('finishQuiz')) return;
         
-        document.getElementById('quizModal').classList.add('hide');
-        showNotification('Quiz completo! +100 XP de boas-vindas');
-        loadUserData();
-        displayWorkoutOfDay();
+        const nextBtn = document.getElementById('nextQuizBtn');
+        setButtonLoading(nextBtn, true);
+        
+        try {
+            const processedAnswers = {};
+            for (const [key, value] of Object.entries(quizAnswers)) {
+                const question = quizQuestions.find(q => q.id === key);
+                if (question && question.type === 'number') {
+                    const numValue = parseFloat(value);
+                    if (isNaN(numValue)) {
+                        showNotification(`Valor inválido para ${question.label}`, 'error');
+                        return;
+                    }
+                    processedAnswers[key] = numValue;
+                } else {
+                    processedAnswers[key] = value;
+                }
+            }
+            
+            if (!validateHeight(processedAnswers.altura) || !validateWeight(processedAnswers.peso)) {
+                showNotification('Altura ou peso inválidos', 'error');
+                return;
+            }
+            
+            const imc = (processedAnswers.peso / ((processedAnswers.altura / 100) ** 2)).toFixed(1);
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, {
+                quiz: processedAnswers,
+                imc: imc,
+                currentWeight: processedAnswers.peso,
+                weightHistory: [{ data: new Date().toISOString(), valor: processedAnswers.peso }],
+                adaptationFactor: 1.0,
+                xp: increment(100)
+            });
+            
+            document.getElementById('quizModal').classList.add('hide');
+            showNotification('Quiz completo! +100 XP de boas-vindas', 'success');
+            await loadUserData();
+            await displayWorkoutOfDay();
+            document.getElementById('mainApp').classList.remove('hide');
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('Erro ao salvar quiz', 'error');
+        } finally {
+            setButtonLoading(nextBtn, false);
+        }
     }
     
-    // Event Listeners
-    document.getElementById('nextQuizBtn')?.addEventListener('click', () => {
-        const answer = document.getElementById('quizAnswer')?.value;
-        if (answer) {
-            quizAnswers[quizQuestions[currentQuizStep].id] = answer;
-            currentQuizStep++;
-            if (currentQuizStep < quizQuestions.length) {
-                renderQuizStep();
+    // ========== USERNAME COM TRANSACTION ==========
+    async function saveUniqueUsername(username, uid) {
+        const normalizedUsername = username.toLowerCase().trim().replace(/\s+/g, '_');
+        const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+        
+        if (!usernameRegex.test(normalizedUsername)) {
+            throw new Error('Username deve ter 3-20 caracteres (letras, números, underscore)');
+        }
+        
+        try {
+            const usernameRef = doc(db, "usernames", normalizedUsername);
+            const userRef = doc(db, "users", uid);
+            
+            await runTransaction(db, async (transaction) => {
+                const usernameDoc = await transaction.get(usernameRef);
+                if (usernameDoc.exists()) {
+                    throw new Error('Username já existe. Escolha outro.');
+                }
+                transaction.set(usernameRef, { uid: uid, username: normalizedUsername, createdAt: Timestamp.now() });
+                transaction.update(userRef, { username: normalizedUsername });
+            });
+            
+            return normalizedUsername;
+        } catch (error) {
+            console.error('Erro ao salvar username:', error);
+            throw error;
+        }
+    }
+    
+    // ========== TIMER ==========
+    function startTimer(seconds = 90) {
+        if (activeTimer) {
+            clearInterval(activeTimer);
+            activeTimer = null;
+        }
+        
+        let sec = seconds;
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startTimerBtn');
+        
+        if (startBtn) startBtn.disabled = true;
+        if (timerDisplay) timerDisplay.style.color = '#ff5e00';
+        
+        activeTimer = setInterval(() => {
+            if (sec <= 0) {
+                clearInterval(activeTimer);
+                activeTimer = null;
+                if (timerDisplay) {
+                    timerDisplay.innerHTML = "⏰ Descanso concluído!";
+                    timerDisplay.style.color = "#00ff88";
+                }
+                if (startBtn) startBtn.disabled = false;
             } else {
-                finishQuiz();
+                if (timerDisplay) timerDisplay.innerHTML = `${sec}s restantes`;
+                sec--;
             }
+        }, 1000);
+    }
+    
+    // ========== EVENT LISTENERS ==========
+    document.getElementById('nextQuizBtn')?.addEventListener('click', async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        try {
+            const answer = document.getElementById('quizAnswer')?.value;
+            if (answer) {
+                quizAnswers[quizQuestions[currentQuizStep].id] = answer;
+                currentQuizStep++;
+                if (currentQuizStep < quizQuestions.length) {
+                    renderQuizStep();
+                } else {
+                    await finishQuiz();
+                }
+            }
+        } finally {
+            isProcessing = false;
         }
     });
     
     document.getElementById('askCoachBtn')?.addEventListener('click', async () => {
-        const question = document.getElementById('coachQuestion').value;
-        if (!question) return;
+        if (isProcessing) return;
         
-        const chatContainer = document.getElementById('chatContainer');
-        chatContainer.innerHTML += `<div class="message user"><div class="message-content">${question}</div></div>`;
-        document.getElementById('coachQuestion').value = '';
+        const question = document.getElementById('coachQuestion')?.value;
         
-        const response = await askAI(question, userData);
-        chatContainer.innerHTML += `<div class="message bot"><div class="message-content">${response}</div></div>`;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        if (!question || question.trim() === '') {
+            showNotification('Digite uma pergunta para o coach IA', 'error');
+            return;
+        }
+        
+        isProcessing = true;
+        const askBtn = document.getElementById('askCoachBtn');
+        setButtonLoading(askBtn, true);
+        
+        try {
+            const chatContainer = document.getElementById('chatContainer');
+            if (chatContainer) {
+                chatContainer.innerHTML += `<div class="message user"><div class="message-content">${escapeHtml(question)}</div></div>`;
+            }
+            const questionInput = document.getElementById('coachQuestion');
+            if (questionInput) questionInput.value = '';
+            
+            if (chatContainer) {
+                chatContainer.innerHTML += `<div class="message bot"><div class="message-content"><div class="loading-spinner" style="width:20px;height:20px;"></div></div></div>`;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            const response = await askAI(question, userData);
+            
+            const lastMessage = chatContainer?.lastElementChild;
+            if (lastMessage && lastMessage.classList.contains('bot')) {
+                const contentDiv = lastMessage.querySelector('.message-content');
+                if (contentDiv) {
+                    // 🔴 #4: Sanitizar resposta antes de inserir
+                    const sanitizedResponse = escapeHtml(response);
+                    contentDiv.innerHTML = sanitizedResponse.replace(/\n/g, '<br>');
+                }
+            }
+        } catch (error) {
+            console.error('Erro no chat:', error);
+            showNotification('Erro ao processar pergunta', 'error');
+        } finally {
+            setButtonLoading(askBtn, false);
+            isProcessing = false;
+        }
     });
     
     document.getElementById('feedbackEasy')?.addEventListener('click', async () => {
-        const newFactor = Math.min(1.7, (userData.adaptationFactor || 1.0) + 0.1);
-        await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
-        showNotification('Treino ajustado para mais intensidade!');
-        displayWorkoutOfDay();
+        if (!requireAuth('feedbackEasy')) return;
+        if (!validateQuizBeforeAction()) return;
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        try {
+            const newFactor = Math.min(1.7, (userData?.adaptationFactor || 1.0) + 0.1);
+            await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
+            showNotification('Treino ajustado para mais intensidade!', 'success');
+            await displayWorkoutOfDay();
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('Erro ao ajustar treino', 'error');
+        } finally {
+            isProcessing = false;
+        }
     });
     
     document.getElementById('feedbackHard')?.addEventListener('click', async () => {
-        const newFactor = Math.max(0.6, (userData.adaptationFactor || 1.0) - 0.1);
-        await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
-        showNotification('Treino ajustado para menor intensidade');
-        displayWorkoutOfDay();
+        if (!requireAuth('feedbackHard')) return;
+        if (!validateQuizBeforeAction()) return;
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        try {
+            const newFactor = Math.max(0.6, (userData?.adaptationFactor || 1.0) - 0.1);
+            await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
+            showNotification('Treino ajustado para menor intensidade', 'success');
+            await displayWorkoutOfDay();
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('Erro ao ajustar treino', 'error');
+        } finally {
+            isProcessing = false;
+        }
     });
     
     document.getElementById('regenerateWorkoutBtn')?.addEventListener('click', async () => {
-        const newWorkout = generateIntelligentWorkout(userData.quiz, userData.workoutHistory || [], userData.adaptationFactor || 1.0);
-        await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: newWorkout });
-        displayWorkoutOfDay();
-        showNotification('Novo treino gerado!');
+        if (!requireAuth('regenerateWorkout')) return;
+        if (!validateQuizBeforeAction()) return;
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        const regenBtn = document.getElementById('regenerateWorkoutBtn');
+        setButtonLoading(regenBtn, true);
+        
+        try {
+            const newWorkout = generateIntelligentWorkout(
+                userData?.quiz,
+                userData?.workoutHistory || [],
+                userData?.adaptationFactor || 1.0
+            );
+            
+            if (newWorkout) {
+                await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: newWorkout });
+                await displayWorkoutOfDay();
+                showNotification('Novo treino gerado!', 'success');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('Erro ao gerar novo treino', 'error');
+        } finally {
+            setButtonLoading(regenBtn, false);
+            isProcessing = false;
+        }
     });
     
     document.getElementById('updateWeightBtn')?.addEventListener('click', async () => {
+        if (!requireAuth('updateWeight')) return;
+        
         const newWeight = prompt('Novo peso (kg):');
-        if (newWeight && !isNaN(newWeight)) {
-            const newImc = (parseFloat(newWeight) / ((userData.quiz.altura / 100) ** 2)).toFixed(1);
-            await updateDoc(doc(db, "users", currentUser.uid), {
-                currentWeight: parseFloat(newWeight),
-                imc: newImc,
-                weightHistory: arrayUnion({ data: new Date().toISOString(), valor: parseFloat(newWeight) })
-            });
-            loadUserData();
-            showNotification('Peso atualizado!');
-        }
-    });
-    
-    document.getElementById('startTimerBtn')?.addEventListener('click', () => {
-        let sec = 90;
-        const timerDisplay = document.getElementById('timerDisplay');
-        const interval = setInterval(() => {
-            if (sec <= 0) {
-                clearInterval(interval);
-                timerDisplay.innerHTML = "⏰ Descanso concluído!";
-                timerDisplay.style.color = "#ff5e00";
-            } else {
-                timerDisplay.innerHTML = `${sec}s restantes`;
-                sec--;
+        if (newWeight && validateWeight(newWeight)) {
+            showLoading(true, 'Atualizando peso...');
+            try {
+                const altura = userData?.quiz?.altura;
+                if (!altura) {
+                    showNotification('Complete o quiz primeiro para calcular IMC', 'error');
+                    return;
+                }
+                
+                const weightNum = parseFloat(newWeight);
+                const newImc = (weightNum / ((altura / 100) ** 2)).toFixed(1);
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    currentWeight: weightNum,
+                    imc: newImc,
+                    weightHistory: arrayUnion({ data: new Date().toISOString(), valor: weightNum })
+                });
+                await loadUserData();
+                showNotification('Peso atualizado!', 'success');
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('Erro ao atualizar peso', 'error');
+            } finally {
+                showLoading(false);
             }
-        }, 1000);
+        } else if (newWeight) {
+            showNotification('Peso inválido (20-500kg)', 'error');
+        }
     });
     
-    // Autenticação
-    document.getElementById('doEmailLogin').onclick = async () => {
-        const email = document.getElementById('loginEmail').value;
-        const pass = document.getElementById('loginPassword').value;
+    document.getElementById('startTimerBtn')?.addEventListener('click', () => startTimer(90));
+    
+    // ========== AUTENTICAÇÃO ==========
+    document.getElementById('doEmailLogin')?.addEventListener('click', async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+        const loginBtn = document.getElementById('doEmailLogin');
+        setButtonLoading(loginBtn, true);
+        
         try {
-            await signInWithEmailAndPassword(auth, email, pass);
-        } catch (e) { alert("Erro: " + e.message); }
-    };
-    
-    document.getElementById('googleLoginBtn').onclick = async () => {
-        try {
-            await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch (e) { alert(e.message); }
-    };
-    
-    document.getElementById('doSignup').onclick = async () => {
-        const email = document.getElementById('signupEmail').value;
-        const pass = document.getElementById('signupPassword').value;
-        if (pass.length < 6) { document.getElementById('signupError').innerText = "Senha mín 6"; return; }
-        try {
-            const cred = await createUserWithEmailAndPassword(auth, email, pass);
-            await sendEmailVerification(cred.user);
-            alert("Verifique seu email antes de fazer login.");
-            await auth.signOut();
-        } catch (e) { document.getElementById('signupError').innerText = e.message; }
-    };
-    
-    document.getElementById('forgotPassLink').onclick = async () => {
-        const email = prompt("Digite seu email");
-        if (email) await sendPasswordResetEmail(auth, email);
-        alert("Email de recuperação enviado.");
-    };
-    
-    document.getElementById('showLoginBtn').onclick = () => {
-        document.getElementById('loginForm').classList.remove('hide');
-        document.getElementById('signupForm').classList.add('hide');
-    };
-    
-    document.getElementById('showSignupBtn').onclick = () => {
-        document.getElementById('loginForm').classList.add('hide');
-        document.getElementById('signupForm').classList.remove('hide');
-    };
-    
-    document.getElementById('logoutBtn')?.addEventListener('click', () => auth.signOut());
-    
-    document.getElementById('saveUsernameBtn').onclick = async () => {
-        const username = document.getElementById('usernameInput').value.trim();
-        if (!username) return;
-        const q = query(collection(db, "usernames"), where("username", "==", username));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-            document.getElementById('usernameError').innerText = 'Username já existe';
-            return;
-        }
-        await setDoc(doc(db, "usernames", username), { uid: currentUser.uid, username });
-        await updateDoc(doc(db, "users", currentUser.uid), { username });
-        document.getElementById('usernameModal').classList.add('hide');
-        if (!userData?.quiz) {
-            currentQuizStep = 0;
-            quizAnswers = {};
-            renderQuizStep();
-            document.getElementById('quizModal').classList.remove('hide');
-        } else {
-            loadUserData();
-            displayWorkoutOfDay();
-        }
-    };
-    
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-            if (!user.emailVerified && user.providerData[0]?.providerId !== 'google.com') {
-                alert("Verifique seu email antes de acessar.");
-                await auth.signOut();
+            const email = document.getElementById('loginEmail')?.value;
+            const pass = document.getElementById('loginPassword')?.value;
+            
+            if (!email || !validateEmail(email)) {
+                showNotification('Email inválido', 'error');
                 return;
             }
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-            if (!userSnap.exists()) {
-                await setDoc(userRef, {
-                    email: user.email,
-                    createdAt: new Date().toISOString(),
-                    streak: 0,
-                    totalWorkouts: 0,
-                    xp: 0,
-                    achievements: []
-                });
+            if (!pass || pass.length < 6) {
+                showNotification('Senha deve ter no mínimo 6 caracteres', 'error');
+                return;
             }
-            userData = userSnap.data();
-            if (!userData?.username) {
-                document.getElementById('authScreen').classList.add('hide');
-                document.getElementById('mainApp').classList.add('hide');
-                document.getElementById('usernameModal').classList.remove('hide');
-            } else if (!userData?.quiz) {
-                document.getElementById('authScreen').classList.add('hide');
-                document.getElementById('mainApp').classList.add('hide');
-                document.getElementById('quizModal').classList.remove('hide');
+            
+            showLoading(true, 'Entrando...');
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (e) {
+            showNotification(getFirebaseErrorMessage(e), 'error');
+        } finally {
+            showLoading(false);
+            setButtonLoading(loginBtn, false);
+            isProcessing = false;
+        }
+    });
+    
+    document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+        const googleBtn = document.getElementById('googleLoginBtn');
+        setButtonLoading(googleBtn, true);
+        
+        try {
+            showLoading(true, 'Entrando com Google...');
+            await signInWithPopup(auth, new GoogleAuthProvider());
+        } catch (e) {
+            showNotification(getFirebaseErrorMessage(e), 'error');
+        } finally {
+            showLoading(false);
+            setButtonLoading(googleBtn, false);
+            isProcessing = false;
+        }
+    });
+    
+    document.getElementById('doSignup')?.addEventListener('click', async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+        const signupBtn = document.getElementById('doSignup');
+        setButtonLoading(signupBtn, true);
+        
+        try {
+            const email = document.getElementById('signupEmail')?.value;
+            const pass = document.getElementById('signupPassword')?.value;
+            
+            if (!email || !validateEmail(email)) {
+                showNotification('Email inválido', 'error');
+                return;
+            }
+            if (!pass || pass.length < 6) {
+                showNotification('Senha deve ter no mínimo 6 caracteres', 'error');
+                return;
+            }
+            
+            showLoading(true, 'Criando conta...');
+            const cred = await createUserWithEmailAndPassword(auth, email, pass);
+            await sendEmailVerification(cred.user);
+            showNotification('Conta criada! Verifique seu email.', 'success');
+            await auth.signOut();
+        } catch (e) {
+            showNotification(getFirebaseErrorMessage(e), 'error');
+        } finally {
+            showLoading(false);
+            setButtonLoading(signupBtn, false);
+            isProcessing = false;
+        }
+    });
+    
+    document.getElementById('forgotPassLink')?.addEventListener('click', async () => {
+        const email = prompt("Digite seu email");
+        if (email && validateEmail(email)) {
+            showLoading(true, 'Enviando email...');
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showNotification("Email de recuperação enviado.", 'success');
+            } catch (e) {
+                showNotification(getFirebaseErrorMessage(e), 'error');
+            } finally {
+                showLoading(false);
+            }
+        } else if (email) {
+            showNotification('Email inválido', 'error');
+        }
+    });
+    
+    document.getElementById('showLoginBtn')?.addEventListener('click', () => {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        if (loginForm) loginForm.classList.remove('hide');
+        if (signupForm) signupForm.classList.add('hide');
+    });
+    
+    document.getElementById('showSignupBtn')?.addEventListener('click', () => {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        if (loginForm) loginForm.classList.add('hide');
+        if (signupForm) signupForm.classList.remove('hide');
+    });
+    
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (activeTimer) {
+            clearInterval(activeTimer);
+            activeTimer = null;
+        }
+        auth.signOut();
+    });
+    
+    document.getElementById('saveUsernameBtn')?.addEventListener('click', async () => {
+        if (!requireAuth('saveUsername')) return;
+        if (isProcessing) return;
+        isProcessing = true;
+        const saveBtn = document.getElementById('saveUsernameBtn');
+        setButtonLoading(saveBtn, true);
+        
+        try {
+            const username = document.getElementById('usernameInput')?.value.trim();
+            if (!username) {
+                document.getElementById('usernameError').innerText = 'Digite um username';
+                return;
+            }
+            
+            showLoading(true, 'Salvando username...');
+            await saveUniqueUsername(username, currentUser.uid);
+            document.getElementById('usernameModal').classList.add('hide');
+            
+            // 🔴 #3: Garantir consistência recarregando os dados
+            await loadUserData();
+            
+            if (!userData?.quiz) {
                 currentQuizStep = 0;
                 quizAnswers = {};
                 renderQuizStep();
+                document.getElementById('quizModal').classList.remove('hide');
             } else {
-                document.getElementById('authScreen').classList.add('hide');
-                document.getElementById('mainApp').classList.remove('hide');
-                await loadUserData();
                 await displayWorkoutOfDay();
+                document.getElementById('mainApp').classList.remove('hide');
             }
-        } else {
-            document.getElementById('authScreen').classList.remove('hide');
-            document.getElementById('mainApp').classList.add('hide');
-            currentUser = null;
+        } catch (error) {
+            document.getElementById('usernameError').innerText = error.message;
+        } finally {
+            showLoading(false);
+            setButtonLoading(saveBtn, false);
+            isProcessing = false;
+        }
+    });
+    
+    // ========== AUTH STATE HANDLER ==========
+    onAuthStateChanged(auth, async (user) => {
+        showLoading(true, 'Carregando...');
+        
+        try {
+            if (user) {
+                currentUser = user;
+                
+                // 🔴 #2: Acesso seguro ao providerData
+                const isGoogleUser = user.providerData?.[0]?.providerId === 'google.com';
+                
+                if (!user.emailVerified && !isGoogleUser) {
+                    showNotification("Verifique seu email antes de acessar.", 'error');
+                    await auth.signOut();
+                    return;
+                }
+                
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        email: user.email,
+                        createdAt: new Date().toISOString(),
+                        streak: 0,
+                        totalWorkouts: 0,
+                        xp: 0,
+                        achievements: []
+                    });
+                    userData = { email: user.email, streak: 0, totalWorkouts: 0, xp: 0, achievements: [] };
+                } else {
+                    userData = userSnap.data();
+                }
+                
+                if (!userData?.username) {
+                    document.getElementById('authScreen').classList.add('hide');
+                    document.getElementById('mainApp').classList.add('hide');
+                    document.getElementById('usernameModal').classList.remove('hide');
+                } else if (!userData?.quiz) {
+                    document.getElementById('authScreen').classList.add('hide');
+                    document.getElementById('mainApp').classList.add('hide');
+                    document.getElementById('quizModal').classList.remove('hide');
+                    currentQuizStep = 0;
+                    quizAnswers = {};
+                    renderQuizStep();
+                } else {
+                    document.getElementById('authScreen').classList.add('hide');
+                    document.getElementById('mainApp').classList.remove('hide');
+                    await loadUserData();
+                    await displayWorkoutOfDay();
+                }
+            } else {
+                document.getElementById('authScreen').classList.remove('hide');
+                document.getElementById('mainApp').classList.add('hide');
+                document.getElementById('usernameModal').classList.add('hide');
+                document.getElementById('quizModal').classList.add('hide');
+                currentUser = null;
+                userData = null;
+                
+                if (activeTimer) {
+                    clearInterval(activeTimer);
+                    activeTimer = null;
+                }
+            }
+        } catch (error) {
+            console.error('Erro no auth state:', error);
+            showNotification('Erro ao carregar aplicação', 'error');
+        } finally {
+            showLoading(false);
         }
     });
 </script>
