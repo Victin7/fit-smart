@@ -3,21 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BOSSFIT AI | Treino Inteligente Profissional</title>
+    <title>BOSSFIT | AI Fitness Coach</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #eef2ff; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #eef2ff; overflow-x: hidden; }
         
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px #ff5e00; } 50% { box-shadow: 0 0 20px #ff5e00; } }
-        @keyframes checkBounce { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        @keyframes progressPulse { 0% { opacity: 0.7; } 100% { opacity: 1; } }
         
         .loading-overlay {
             position: fixed;
@@ -41,7 +35,7 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        
+        .loading-text { margin-top: 16px; color: #ff9f6e; font-weight: 500; }
         .btn-loading { position: relative; pointer-events: none; opacity: 0.7; }
         .btn-loading::after {
             content: '';
@@ -59,7 +53,6 @@
         }
         
         .app-container { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
-        
         .navbar {
             display: flex;
             justify-content: space-between;
@@ -74,15 +67,25 @@
             position: sticky;
             top: 10px;
             z-index: 100;
-            animation: fadeInUp 0.4s ease-out;
         }
-        
         .logo { font-size: 1.9rem; font-weight: 800; background: linear-gradient(135deg, #ff7b2c, #ff5e00); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
-        
+        .nav-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn-outline-light {
+            background: transparent;
+            border: 1px solid #ff7b2c;
+            color: #ff9f6e;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-outline-light:hover:not(:disabled) { background: rgba(255, 94, 0, 0.2); border-color: #ff5e00; transform: translateY(-2px); }
+        .btn-outline-light:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary {
             background: linear-gradient(105deg, #ff5e00, #ff8c42);
             border: none;
-            padding: 12px 24px;
+            padding: 10px 24px;
             border-radius: 40px;
             font-weight: 700;
             color: white;
@@ -92,19 +95,6 @@
         }
         .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 94, 0, 0.4); }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        
-        .btn-outline-light {
-            background: transparent;
-            border: 1px solid #ff7b2c;
-            color: #ff9f6e;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-outline-light:hover:not(:disabled) { background: rgba(255, 94, 0, 0.2); border-color: #ff5e00; transform: translateY(-2px); }
-        
         .card {
             background: #14161f;
             border-radius: 32px;
@@ -115,84 +105,53 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
         .card:hover { transform: translateY(-4px); border-color: #ff5e00; }
-        
         .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; }
-        
-        .workout-progress-container {
-            background: #2a2d3a;
-            border-radius: 30px;
-            height: 12px;
-            overflow: hidden;
-            margin: 16px 0;
+        .username-badge { background: #ff5e0022; padding: 6px 12px; border-radius: 30px; font-size: 0.85rem; font-weight: 500; color: #ffaa70; cursor: pointer; transition: all 0.2s; }
+        .username-badge:hover { background: #ff5e0044; transform: scale(1.02); }
+        input, select, textarea {
+            background: #1e2029;
+            border: 1px solid #2d313e;
+            padding: 12px 16px;
+            border-radius: 24px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            margin-bottom: 14px;
+            transition: 0.2s;
         }
-        .workout-progress-fill {
-            background: linear-gradient(90deg, #ff5e00, #ff8c42);
-            height: 100%;
-            width: 0%;
-            transition: width 0.5s ease-out;
-            border-radius: 30px;
-            animation: progressPulse 0.5s ease-out;
-        }
-        
-        .workout-stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-        .stat-badge { background: #ff5e0011; padding: 8px 16px; border-radius: 40px; font-size: 0.85rem; border: 1px solid #ff5e0022; transition: all 0.2s; }
-        .stat-badge:hover { transform: scale(1.05); background: #ff5e0022; }
-        
-        .exercise-item {
-            background: #1a1c26;
-            padding: 16px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
-            border: 1px solid transparent;
-        }
-        .exercise-item.completed { background: #1a3a2a; border-color: #28a745; opacity: 0.85; }
-        .exercise-item.completed .exercise-name { text-decoration: line-through; color: #28a745; }
-        .exercise-item:hover { transform: translateX(4px); background: #202230; }
-        
-        .sets-control { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .set-dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: #2a2d3a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .set-dot.completed { background: #28a745; color: white; transform: scale(1.05); }
-        .set-dot:hover { transform: scale(1.05); background: #ff5e00; }
-        
-        .coach-message {
-            background: linear-gradient(135deg, #ff5e0011, #ff8c4211);
-            border-left: 4px solid #ff5e00;
-            padding: 16px;
-            border-radius: 16px;
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #ff5e00; box-shadow: 0 0 0 2px rgba(255,94,0,0.3); }
+        .chat-container { 
+            height: 400px; 
+            overflow-y: auto; 
+            padding: 16px; 
+            background: #0f1118; 
+            border-radius: 24px; 
             margin-bottom: 16px;
-            animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
         }
-        
-        .week-plan { background: #0f1118; border-radius: 20px; padding: 16px; margin-top: 16px; }
-        .week-day { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #262a36; transition: all 0.2s; }
-        .week-day.today { background: #ff5e0011; border-radius: 12px; }
-        .week-day:hover { background: #ff5e0011; border-radius: 12px; }
-        
-        .streak-fire { animation: glow 1.5s infinite; }
-        .check-animation { animation: checkBounce 0.3s ease-out; }
-        
-        .chat-container { height: 400px; overflow-y: auto; background: #0f1118; border-radius: 24px; padding: 16px; margin-bottom: 16px; }
-        .message { margin-bottom: 16px; display: flex; animation: slideIn 0.3s ease-out; }
+        .message { margin-bottom: 16px; display: flex; animation: fadeInUp 0.3s ease-out; }
         .message.user { justify-content: flex-end; }
         .message.bot { justify-content: flex-start; }
-        .message-content { max-width: 70%; padding: 12px 18px; border-radius: 20px; }
+        .message-content { max-width: 70%; padding: 12px 18px; border-radius: 20px; word-wrap: break-word; white-space: pre-wrap; }
         .message.user .message-content { background: linear-gradient(135deg, #ff5e00, #ff8c42); color: white; }
         .message.bot .message-content { background: #1e2029; border: 1px solid #ff5e00; }
-        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ffd70020, #ffa50020);
+            border: 1px solid #ffd700;
+            border-radius: 40px;
+            padding: 8px 16px;
+            margin: 4px;
+            font-size: 0.85rem;
+        }
+        .badge.locked { opacity: 0.4; filter: grayscale(0.5); }
+        .level-bar { background: #2a2d3a; border-radius: 20px; height: 8px; overflow: hidden; margin: 12px 0; }
+        .level-progress { background: linear-gradient(90deg, #ff5e00, #ff8c42); height: 100%; transition: width 0.5s ease; }
+        .timer-btn { background: #ff5e00; border: none; border-radius: 60px; padding: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .timer-btn:hover:not(:disabled) { transform: scale(1.02); }
         .notification {
             position: fixed;
             top: 80px;
@@ -203,41 +162,35 @@
             border-radius: 12px;
             z-index: 1000;
             animation: fadeInUp 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
-        .notification.success { background: #28a745; }
         .notification.error { background: #dc3545; }
+        .notification.success { background: #28a745; }
         .notification.warning { background: #ffc107; color: #000; }
-        
-        .ranking-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #262a36;
-            transition: all 0.2s;
+        @media (max-width: 680px) {
+            .app-container { padding: 16px; }
+            .navbar { flex-direction: column; gap: 12px; }
+            .message-content { max-width: 85%; }
         }
-        .ranking-item:hover { background: #ff5e0011; border-radius: 12px; }
-        .ranking-position { font-weight: bold; color: #ffaa70; width: 40px; }
-        .ranking-name { flex: 1; }
-        .ranking-xp { color: #ffaa70; }
+        .hide { display: none; }
+        .error-text { color: #ff8080; font-size: 0.8rem; margin-top: -8px; margin-bottom: 12px; }
+        .quiz-question { animation: fadeInUp 0.3s ease-out; }
         
-        .challenge-card {
-            background: linear-gradient(135deg, #ff5e0011, #ff8c4211);
-            border-radius: 20px;
+        .email-verification-banner {
+            background: #ffc10722;
+            border: 1px solid #ffc107;
+            border-radius: 12px;
             padding: 16px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
             text-align: center;
         }
-        
-        @media (max-width: 680px) { .set-dot { width: 48px; height: 48px; } .app-container { padding: 16px; } }
-        .hide { display: none; }
     </style>
 </head>
 <body>
 <div class="app-container" id="appRoot">
     <div id="loadingOverlay" class="loading-overlay hide">
         <div class="loading-spinner"></div>
-        <div class="loading-text" style="margin-top:16px;">Carregando...</div>
+        <div class="loading-text">Carregando...</div>
     </div>
 
     <div id="authScreen">
@@ -250,18 +203,23 @@
         </div>
         <div class="card" style="max-width: 500px; margin: 0 auto;">
             <div id="loginForm">
-                <h2>Acessar <span style="color:#ff5e00;">BOSSFIT AI</span></h2>
+                <h2 style="margin-bottom: 20px;">Acessar <span style="color:#ff5e00;">BOSSFIT AI</span></h2>
                 <input type="email" id="loginEmail" placeholder="seu@email.com">
+                <div class="error-text" id="loginEmailError"></div>
                 <input type="password" id="loginPassword" placeholder="senha">
+                <div class="error-text" id="loginPasswordError"></div>
                 <button class="btn-primary" id="doEmailLogin" style="width:100%">Entrar</button>
                 <button class="btn-outline-light" id="googleLoginBtn" style="width:100%; margin-top:12px;">🔐 Entrar com Google</button>
-                <p style="margin-top:16px; text-align:center"><a href="#" id="forgotPassLink">Esqueci a senha</a></p>
+                <p style="margin-top: 16px; text-align:center"><a href="#" id="forgotPassLink" style="color:#ff9f6e;">Esqueci a senha</a></p>
             </div>
             <div id="signupForm" class="hide">
                 <h2>Criar conta</h2>
                 <input type="email" id="signupEmail" placeholder="Email">
+                <div class="error-text" id="signupEmailError"></div>
                 <input type="password" id="signupPassword" placeholder="Senha (mínimo 6)">
+                <div class="error-text" id="signupPasswordError"></div>
                 <button class="btn-primary" id="doSignup">Cadastrar</button>
+                <div id="signupError" class="error-text"></div>
             </div>
         </div>
     </div>
@@ -270,28 +228,33 @@
         <div class="navbar">
             <div class="logo">🏋️ BOSSFIT AI</div>
             <div>
-                <span id="profileUsernameDisplay" class="btn-outline-light" style="padding:6px 12px;">@carregando ✏️</span>
-                <span id="levelDisplay" class="btn-outline-light" style="padding:6px 12px;">Nível 1</span>
-                <span id="streakBadge" class="btn-outline-light" style="padding:6px 12px;">🔥 0 dias</span>
+                <span id="profileUsernameDisplay" class="username-badge">@carregando... ✏️</span>
+                <span id="levelDisplay" class="username-badge" style="background:#ff5e0033;">Nível 1</span>
                 <button id="logoutBtn" class="btn-outline-light" style="margin-left:12px;">Sair</button>
             </div>
         </div>
 
-        <div id="coachMessageContainer" class="coach-message"></div>
+        <div id="emailVerificationBanner" class="email-verification-banner hide">
+            <p>📧 Verifique seu email para acessar todas as funcionalidades!</p>
+            <button id="resendVerificationBtn" class="btn-outline-light" style="margin-top:8px;">Reenviar verificação</button>
+        </div>
 
         <div class="grid-2">
             <div class="card">
                 <h3>📊 Seu Progresso</h3>
-                <div class="workout-progress-container"><div class="workout-progress-fill" id="xpProgress" style="width:0%"></div></div>
+                <div class="level-bar">
+                    <div class="level-progress" id="xpProgress" style="width: 0%"></div>
+                </div>
                 <p id="imcValue">IMC: --</p>
-                <p id="weightValue">Peso: -- kg <button id="updateWeightBtn" class="btn-outline-light" style="padding:4px 12px;">✏️</button></p>
-                <p id="goalProgress"></p>
+                <p id="weightValue">Peso: -- kg <button id="updateWeightBtn" class="btn-outline-light" style="padding: 4px 12px; font-size: 0.8rem;">✏️</button></p>
+                <button id="editProfileBtn" class="btn-outline-light" style="width:100%; margin-top:8px;">✏️ Editar Perfil</button>
             </div>
             <div class="card">
-                <h3>🏆 Conquistas</h3>
-                <p>⭐ XP: <span id="xpTotal">0</span></p>
-                <p>🏋️ Treinos: <span id="totalWorkouts">0</span></p>
-                <div id="badgesContainer" class="grid-3"></div>
+                <h3>🔥 Streak & Conquistas</h3>
+                <p id="streakCount">0 dias consecutivos</p>
+                <p>🏆 Total treinos: <span id="totalWorkouts">0</span></p>
+                <p>⭐ XP Total: <span id="xpTotal">0</span></p>
+                <div id="badgesContainer"></div>
             </div>
         </div>
 
@@ -300,44 +263,21 @@
             <canvas id="weightChartCanvas" height="120"></canvas>
         </div>
 
-        <!-- 🔴 #8: Ranking -->
         <div class="card">
-            <h3>🏆 Ranking Global</h3>
-            <div id="rankingContainer"></div>
-        </div>
-
-        <div class="grid-2">
-            <div class="card">
-                <h3>📅 Plano Semanal</h3>
-                <div id="weeklyPlanContainer" class="week-plan"></div>
-            </div>
-            <div class="card">
-                <h3>🎯 Metas da Semana</h3>
-                <div id="goalContainer"></div>
-                <!-- 🔴 #7: Desafios -->
-                <div id="challengeContainer" class="challenge-card"></div>
-            </div>
-        </div>
-
-        <div class="card" id="workoutCard">
             <h3>🏋️ Treino Inteligente do Dia</h3>
-            <div id="workoutInfo" class="workout-stats"></div>
-            <div class="workout-progress-container"><div class="workout-progress-fill" id="workoutProgressFill" style="width:0%"></div></div>
-            <p id="progressText" style="text-align:center; font-size:0.85rem;">0% concluído</p>
             <div id="workoutOfDay"></div>
-            <button id="completeWorkoutBtn" class="btn-primary" style="width:100%; margin-top:16px;" disabled>✅ Concluir treino</button>
-            <div class="feedback-group" style="display:flex; gap:12px; margin-top:16px;">
-                <button id="feedbackEasy" class="btn-outline-light" style="flex:1;">Fácil ➕</button>
-                <button id="feedbackHard" class="btn-outline-light" style="flex:1;">Difícil ➖</button>
-                <button id="regenerateWorkoutBtn" class="btn-outline-light" style="flex:1;">🔄 Gerar novo</button>
+            <div class="feedback-group" style="margin-top: 16px;">
+                <button id="feedbackEasy" class="btn-outline-light">Fácil ➕</button>
+                <button id="feedbackHard" class="btn-outline-light">Difícil ➖</button>
+                <button id="regenerateWorkoutBtn" class="btn-outline-light">🔄 Gerar novo treino</button>
             </div>
         </div>
 
         <div class="grid-2">
             <div class="card">
-                <h3>⏱️ Timer</h3>
-                <p id="timerDisplay" style="font-size:2rem; font-weight:bold;">90s</p>
-                <button id="startTimerBtn" class="btn-primary" style="width:100%;">Iniciar</button>
+                <h3>⏱️ Timer de Descanso</h3>
+                <p id="timerDisplay" style="font-size: 2rem; font-weight: bold;">90s</p>
+                <button id="startTimerBtn" class="timer-btn">Iniciar 90s</button>
             </div>
             <div class="card">
                 <h3>🍽️ Plano Alimentar</h3>
@@ -346,20 +286,40 @@
         </div>
 
         <div class="card">
-            <h3>🤖 Coach IA</h3>
+            <h3>🤖 Coach IA (Chat Inteligente)</h3>
             <div class="chat-container" id="chatContainer">
-                <div class="message bot"><div class="message-content">👋 Olá! Sou seu coach IA. Pergunte sobre treino, dieta ou progresso!</div></div>
+                <div class="message bot">
+                    <div class="message-content">👋 Olá! Sou seu coach IA. Pergunte qualquer coisa sobre treino, dieta ou progresso!</div>
+                </div>
             </div>
-            <div style="display:flex; gap:12px;">
-                <input type="text" id="coachQuestion" placeholder="Digite sua pergunta..." style="flex:1;">
+            <div style="display: flex; gap: 12px;">
+                <input type="text" id="coachQuestion" placeholder="Digite sua pergunta..." style="flex: 1;">
                 <button id="askCoachBtn" class="btn-primary">Enviar</button>
             </div>
         </div>
     </div>
 
+    <!-- Modal de Edição de Perfil -->
+    <div id="editProfileModal" class="hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:1200; overflow-y:auto;">
+        <div class="card" style="max-width:500px; max-height:90vh; overflow-y:auto;">
+            <h2>✏️ Editar Perfil</h2>
+            <input type="text" id="editUsername" placeholder="Novo username">
+            <input type="number" id="editWeight" placeholder="Peso (kg)" step="0.1">
+            <input type="number" id="editHeight" placeholder="Altura (cm)">
+            <select id="editGoal">
+                <option value="emagrecimento">Emagrecimento</option>
+                <option value="hipertrofia">Hipertrofia</option>
+                <option value="condicionamento">Condicionamento</option>
+            </select>
+            <button id="saveProfileBtn" class="btn-primary">Salvar Alterações</button>
+            <button id="closeProfileModal" class="btn-outline-light" style="margin-top:8px;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
     <div id="quizModal" class="hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); align-items:center; justify-content:center; z-index:1100; overflow-y:auto;">
-        <div class="card" style="max-width:600px;">
-            <h2>📋 Quiz Inteligente</h2>
+        <div class="card" style="max-width:600px; max-height:90vh; overflow-y:auto;">
+            <h2>📋 Quiz Inteligente BOSSFIT</h2>
             <div id="quizContainer"></div>
             <button id="nextQuizBtn" class="btn-primary" style="width:100%; margin-top:16px;">Próximo</button>
         </div>
@@ -369,11 +329,34 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     
-    // EmailJS Config
-    const EMAILJS_CONFIG = { PUBLIC_KEY: "SEU_PUBLIC_KEY", SERVICE_ID: "SEU_SERVICE_ID", TEMPLATE_ID: "SEU_TEMPLATE_ID" };
-    if (typeof emailjs !== 'undefined') emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
+    // ========== FIREBASE SECURITY RULES ==========
+    /*
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        // Usuários só acessam seus próprios dados
+        match /users/{userId} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+        
+        // Usernames: leitura pública para verificação, escrita apenas autenticada
+        match /usernames/{username} {
+          allow read: if true;
+          allow write: if request.auth != null;
+        }
+        
+        match /{document=**} {
+          allow read, write: if false;
+        }
+      }
+    }
+    
+    // 🔴 #5: Configurações de segurança no Firebase Console:
+    // - Domínios autorizados: adicionar apenas domínios confiáveis
+    // - API Key: restringir por HTTP referrer
+    */
     
     const firebaseConfig = {
         apiKey: "AIzaSyD_vqgrdyTotubZaxa2rdUYaoUaZC1uCfk",
@@ -388,112 +371,320 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     
-    // Estado global
+    // ========== ESTADO GLOBAL ==========
     let currentUser = null;
     let userData = null;
     let currentQuizStep = 0;
     let quizAnswers = {};
     let weightChart = null;
+    let activeTimer = null;
     let isProcessing = false;
     let isLoadingWorkout = false;
+    
+    // Cache
     const CACHE_KEY = 'bossfit_user_cache';
+    const MAX_CHAT_MESSAGES = 50; // 🔴 #1: Limite de mensagens no chat
     
-    // Banco de exercícios
-    const EXERCISES = {
-        peito: [{ name: 'Supino Reto' }, { name: 'Crucifixo' }, { name: 'Flexão' }, { name: 'Crossover' }, { name: 'Supino Inclinado' }],
-        costas: [{ name: 'Puxada Frontal' }, { name: 'Remada Curvada' }, { name: 'Barra Fixa' }, { name: 'Remada Unilateral' }],
-        pernas: [{ name: 'Agachamento' }, { name: 'Leg Press' }, { name: 'Cadeira Extensora' }, { name: 'Mesa Flexora' }, { name: 'Panturrilha' }],
-        ombros: [{ name: 'Desenvolvimento' }, { name: 'Elevação Lateral' }, { name: 'Elevação Frontal' }],
-        biceps: [{ name: 'Rosca Direta' }, { name: 'Rosca Alternada' }, { name: 'Rosca Martelo' }],
-        triceps: [{ name: 'Tríceps Corda' }, { name: 'Tríceps Testa' }, { name: 'Mergulho' }]
-    };
-    
-    // 🔴 #1: CORREÇÃO DO BUG DE PESO
-    function formatWeight(w) {
-        return (w !== undefined && w !== null && w !== '') ? parseFloat(w).toFixed(1) : '--';
+    // ========== UTILITÁRIOS ==========
+    function showLoading(show, text = 'Carregando...') {
+        const overlay = document.getElementById('loadingOverlay');
+        const loadingText = overlay?.querySelector('.loading-text');
+        if (overlay) {
+            if (show) {
+                if (loadingText) loadingText.textContent = text;
+                overlay.classList.remove('hide');
+            } else {
+                overlay.classList.add('hide');
+            }
+        }
     }
     
-    // 🔴 #2: FOCO MUSCULAR INTELIGENTE (60% foco, 40% outros)
-    function getIntelligentExercises(focus, previousExercises = []) {
-        let focusExercises = [];
-        let secondaryExercises = [];
-        
-        if (focus !== 'fullbody' && EXERCISES[focus]) {
-            focusExercises = [...EXERCISES[focus]];
-            // 60% do foco
-            const secondaryGroups = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps'].filter(g => g !== focus);
-            for (let i = 0; i < 2 && secondaryGroups.length; i++) {
-                const group = secondaryGroups[Math.floor(Math.random() * secondaryGroups.length)];
-                if (EXERCISES[group]) secondaryExercises.push(...EXERCISES[group]);
-            }
+    function showNotification(message, type = 'success') {
+        const notif = document.createElement('div');
+        notif.className = `notification ${type}`;
+        notif.textContent = message;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
+    }
+    
+    function setButtonLoading(button, isLoading) {
+        if (!button) return;
+        if (isLoading) {
+            button.classList.add('btn-loading');
+            button.disabled = true;
         } else {
-            focusExercises = [...EXERCISES.peito, ...EXERCISES.costas, ...EXERCISES.pernas];
+            button.classList.remove('btn-loading');
+            button.disabled = false;
         }
-        
-        let allExercises = [...focusExercises.slice(0, 4), ...secondaryExercises.slice(0, 3)];
-        allExercises = allExercises.filter(ex => !previousExercises.includes(ex.name));
-        if (allExercises.length < 4) allExercises = [...focusExercises.slice(0, 5), ...secondaryExercises.slice(0, 2)];
-        
-        for (let i = allExercises.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [allExercises[i], allExercises[j]] = [allExercises[j], allExercises[i]];
-        }
-        return allExercises.slice(0, 5);
     }
     
-    // 🔴 #5: TREINO QUE APRENDE DE VERDADE
-    function getAdaptedSetsReps(goal, level, loadFactor, lastPerformance) {
-        let sets = goal === 'hipertrofia' ? (level === 'iniciante' ? 3 : 4) : 3;
-        let reps = goal === 'hipertrofia' ? '8-12' : (goal === 'emagrecimento' ? '15-20' : '12-15');
+    function sanitizeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function escapeHtml(text) { return sanitizeHtml(text); }
+    
+    function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+    
+    function validateWeight(weight) {
+        const w = parseFloat(weight);
+        return !isNaN(w) && w > 20 && w < 500;
+    }
+    
+    function validateHeight(height) {
+        const h = parseFloat(height);
+        return !isNaN(h) && h > 50 && h < 300;
+    }
+    
+    function safeNumber(value, defaultValue = 0) {
+        const num = parseFloat(value);
+        return isNaN(num) ? defaultValue : num;
+    }
+    
+    // 🔴 #3: Exibição segura de peso com verificação explícita
+    function formatWeight(weight) {
+        if (weight === undefined || weight === null || weight === '') return '--';
+        const num = parseFloat(weight);
+        return isNaN(num) ? '--' : num.toFixed(1);
+    }
+    
+    function validateUsername(username) {
+        if (!username || typeof username !== 'string') return false;
+        const clean = username.toLowerCase().trim().replace(/\s+/g, '_');
+        return /^[a-z0-9_]{3,20}$/.test(clean);
+    }
+    
+    function normalizeUsername(username) {
+        if (!username) return '';
+        let normalized = username.toLowerCase().trim().replace(/\s+/g, '_');
+        normalized = normalized.replace(/[^a-z0-9_]/g, '');
+        if (normalized.length < 3) normalized = `${normalized}_user`;
+        if (normalized.length > 20) normalized = normalized.substring(0, 20);
+        return normalized;
+    }
+    
+    function isQuizComplete(quiz) {
+        if (!quiz) return false;
+        const required = ['objetivo', 'nivel', 'frequencia', 'local', 'idade', 'sexo', 'tempoTreino', 'focoMuscular', 'altura', 'peso'];
+        return required.every(field => quiz[field] !== undefined && quiz[field] !== null);
+    }
+    
+    function getFirebaseErrorMessage(error) {
+        const messages = {
+            'auth/email-already-in-use': 'Este email já está cadastrado.',
+            'auth/invalid-email': 'Email inválido.',
+            'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
+            'auth/user-not-found': 'Usuário não encontrado.',
+            'auth/wrong-password': 'Senha incorreta.',
+            'auth/network-request-failed': 'Erro de rede. Verifique sua conexão.',
+            'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
+            'auth/popup-closed-by-user': 'Janela de login fechada. Tente novamente.'
+        };
+        return messages[error.code] || error.message || 'Ocorreu um erro. Tente novamente.';
+    }
+    
+    function requireAuth(actionName) {
+        if (!currentUser?.uid) {
+            console.warn(`Ação "${actionName}" bloqueada: usuário não autenticado`);
+            showNotification('Faça login para continuar', 'error');
+            return false;
+        }
+        return true;
+    }
+    
+    // 🔴 #4: Função para invalidar cache
+    function invalidateCache() {
+        try {
+            localStorage.removeItem(CACHE_KEY);
+        } catch (e) { console.warn('Cache invalidation failed:', e); }
+    }
+    
+    function saveToCache(data) {
+        if (!data || !currentUser?.uid) return;
+        try {
+            const cacheData = {
+                data: data,
+                timestamp: Date.now(),
+                userId: currentUser.uid
+            };
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+        } catch (e) { console.warn('Cache save failed:', e); }
+    }
+    
+    function getFromCache() {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (!cached) return null;
+            const cacheData = JSON.parse(cached);
+            if (!currentUser || cacheData.userId !== currentUser.uid) return null;
+            if (Date.now() - cacheData.timestamp > 5 * 60 * 1000) return null;
+            return cacheData.data;
+        } catch (e) { return null; }
+    }
+    
+    // ========== SISTEMA DE USERNAME ==========
+    function generateAlternativeUsername(baseUsername) {
+        const cleanBase = normalizeUsername(baseUsername).substring(0, 15);
+        const randomNum = Math.floor(Math.random() * 9000 + 1000);
+        return `${cleanBase}_${randomNum}`;
+    }
+    
+    async function updateUsernameWithTransaction(desiredUsername, uid, oldUsername = null) {
+        if (!uid) throw new Error('UID não fornecido');
         
-        // Adaptação baseada em performance
-        if (lastPerformance) {
-            if (lastPerformance.difficulty === 'easy') {
-                sets = Math.min(6, sets + 1);
-                if (goal === 'hipertrofia') reps = '10-15';
-            } else if (lastPerformance.difficulty === 'hard') {
-                sets = Math.max(2, sets - 1);
-                if (goal === 'hipertrofia') reps = '6-10';
+        let finalUsername = normalizeUsername(desiredUsername);
+        if (!finalUsername || finalUsername.length < 3) {
+            finalUsername = `user_${Math.floor(Math.random() * 10000)}`;
+        }
+        
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        while (attempts < maxAttempts) {
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const usernameRef = doc(db, "usernames", finalUsername);
+                    const usernameDoc = await transaction.get(usernameRef);
+                    
+                    if (usernameDoc.exists()) {
+                        throw new Error('USERNAME_EXISTS');
+                    }
+                    
+                    if (oldUsername && oldUsername !== finalUsername) {
+                        const oldUsernameRef = doc(db, "usernames", oldUsername);
+                        const oldDoc = await transaction.get(oldUsernameRef);
+                        if (oldDoc.exists() && oldDoc.data().uid === uid) {
+                            transaction.delete(oldUsernameRef);
+                        }
+                    }
+                    
+                    transaction.set(usernameRef, {
+                        uid: uid,
+                        username: finalUsername,
+                        createdAt: Timestamp.now(),
+                        updatedAt: Timestamp.now()
+                    });
+                    
+                    transaction.update(doc(db, "users", uid), { username: finalUsername });
+                });
+                
+                invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+                return finalUsername;
+            } catch (error) {
+                if (error.message === 'USERNAME_EXISTS') {
+                    finalUsername = generateAlternativeUsername(desiredUsername);
+                    attempts++;
+                } else {
+                    throw error;
+                }
             }
-            if (lastPerformance.completionRate < 0.7) sets = Math.max(2, sets - 1);
         }
         
-        sets = Math.max(2, Math.min(6, Math.floor(sets * loadFactor)));
-        return { sets, reps };
+        const fallbackUsername = `temp_${Date.now()}`;
+        await runTransaction(db, async (transaction) => {
+            const usernameRef = doc(db, "usernames", fallbackUsername);
+            transaction.set(usernameRef, { uid: uid, username: fallbackUsername, createdAt: Timestamp.now() });
+            transaction.update(doc(db, "users", uid), { username: fallbackUsername });
+        });
+        invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+        return fallbackUsername;
     }
     
-    // 🔴 #3: EVITAR REPETIÇÃO DE TREINO
-    function isWorkoutRepeated(newWorkout, previousWorkouts) {
-        const lastWorkout = previousWorkouts.slice(-1)[0]?.workout;
-        if (!lastWorkout) return false;
-        return JSON.stringify(newWorkout.main) === JSON.stringify(lastWorkout.main);
+    async function initializeUserUsername(uid, email) {
+        if (!uid) return null;
+        
+        try {
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
+            
+            if (userSnap.exists() && userSnap.data()?.username) {
+                return userSnap.data().username;
+            }
+            
+            let baseUsername = email.split('@')[0];
+            baseUsername = normalizeUsername(baseUsername);
+            
+            const finalUsername = await updateUsernameWithTransaction(baseUsername, uid, null);
+            return finalUsername;
+        } catch (error) {
+            console.error('Erro ao inicializar username:', error);
+            const fallbackUsername = `temp_${Date.now()}`;
+            try {
+                await updateDoc(doc(db, "users", uid), { username: fallbackUsername });
+                invalidateCache();
+                return fallbackUsername;
+            } catch {
+                return `temp_${Date.now()}`;
+            }
+        }
     }
     
-    // 🔴 #4: SISTEMA DE PERFORMANCE COMPLETO
-    function generateIntelligentWorkout(quiz, progression, previousWorkouts = [], lastPerformance = null) {
+    // ========== CHAT IA COM LIMITE DE MENSAGENS ==========
+    async function askAI(question, userContext) {
+        if (!question?.trim()) return "Por favor, digite uma pergunta! 💪";
+        
+        const lowerQuestion = question.toLowerCase();
+        const hasQuiz = isQuizComplete(userContext?.quiz);
+        
+        if (lowerQuestion.includes('comer') || lowerQuestion.includes('dieta')) {
+            if (hasQuiz) {
+                const weight = safeNumber(userContext?.currentWeight, 70);
+                const calories = Math.round(weight * (userContext.quiz.objetivo === 'emagrecimento' ? 30 : 35));
+                const protein = Math.round(weight * (userContext.quiz.objetivo === 'hipertrofia' ? 2.2 : 1.8));
+                return `🍽️ **Plano para ${userContext.quiz.objetivo}:**\n📊 ${calories} kcal | ${protein}g proteína\n🥑 Pré-treino: Banana + Café\n🍗 Pós-treino: Whey + Batata`;
+            }
+            return "🍽️ Complete o quiz para recomendações personalizadas!";
+        }
+        
+        if (lowerQuestion.includes('treino')) {
+            if (hasQuiz && userContext?.dailyWorkout) {
+                const w = userContext.dailyWorkout;
+                return `💪 **Treino de hoje:**\n🏋️ ${w.exercises.join(', ')}\n📊 ${w.sets}x${w.reps}\n✨ Descanse 60-90s`;
+            }
+            return "💪 Complete o quiz para receber treinos personalizados!";
+        }
+        
+        return hasQuiz ? 
+            `🤖 Perfil: ${userContext.quiz.objetivo}, nível ${userContext.quiz.nivel}\n🎯 Mantenha consistência!` :
+            "🤖 Complete o quiz para recomendações personalizadas!";
+    }
+    
+    // 🔴 #1: Função para adicionar mensagem ao chat com limite
+    function addChatMessage(chat, messageHtml, isUser = false) {
+        if (!chat) return;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+        messageDiv.innerHTML = messageHtml;
+        chat.appendChild(messageDiv);
+        
+        // 🔴 #1: Limitar número de mensagens
+        while (chat.children.length > MAX_CHAT_MESSAGES) {
+            chat.removeChild(chat.firstChild);
+        }
+        
+        chat.scrollTop = chat.scrollHeight;
+    }
+    
+    // ========== TREINO ==========
+    function generateIntelligentWorkout(quiz, adaptationFactor = 1.0) {
         if (!quiz) return null;
-        const focus = quiz.focoMuscular || 'fullbody';
-        const goal = quiz.objetivo;
-        const level = quiz.nivel;
-        let loadFactor = progression?.loadFactor || 1.0;
-        
-        const previousExercises = previousWorkouts.slice(-2).flatMap(w => w.workout?.main?.map(e => e.name) || []);
-        let selectedExercises = getIntelligentExercises(focus, previousExercises);
-        
-        const { sets, reps } = getAdaptedSetsReps(goal, level, loadFactor, lastPerformance);
-        
-        const main = selectedExercises.map(ex => ({ name: ex.name, sets: sets, reps: reps, completed: false, setsCompleted: 0 }));
-        let difficulty = loadFactor >= 1.4 ? 'Avançado' : loadFactor <= 0.8 ? 'Iniciante' : 'Intermediário';
-        
-        const newWorkout = { main: main, stats: { difficulty: difficulty, focus: focus }, date: new Date().toISOString() };
-        
-        // Evitar repetição
-        if (isWorkoutRepeated(newWorkout, previousWorkouts)) {
-            selectedExercises = getIntelligentExercises(focus, [...previousExercises, ...selectedExercises.map(e => e.name)]);
-            newWorkout.main = selectedExercises.map(ex => ({ name: ex.name, sets: sets, reps: reps, completed: false, setsCompleted: 0 }));
-        }
-        
-        return newWorkout;
+        const workouts = {
+            'push': ['Supino Reto', 'Desenvolvimento', 'Tríceps Corda', 'Paralelas'],
+            'pull': ['Puxada Frontal', 'Remada Curvada', 'Rosca Direta', 'Encolhimento'],
+            'legs': ['Agachamento Livre', 'Leg Press', 'Cadeira Extensora', 'Mesa Flexora'],
+            'fullbody_casa': ['Flexões', 'Agachamento', 'Prancha', 'Afundo', 'Abdominal']
+        };
+        const day = new Date().getDay();
+        const split = day % 3;
+        let selected = quiz.local === 'casa' ? workouts.fullbody_casa : split === 0 ? workouts.push : split === 1 ? workouts.pull : workouts.legs;
+        let sets = quiz.nivel === 'iniciante' ? 3 : (quiz.nivel === 'intermediario' ? 4 : 5);
+        let reps = quiz.objetivo === 'hipertrofia' ? '8-12' : (quiz.objetivo === 'emagrecimento' ? '15-20' : '12-15');
+        sets = Math.max(2, Math.min(6, Math.floor(sets * adaptationFactor)));
+        return { exercises: selected, sets, reps, date: new Date().toISOString(), completed: false };
     }
     
     function isSameDay(d1, d2) { return new Date(d1).toDateString() === new Date(d2).toDateString(); }
@@ -501,549 +692,705 @@
     async function getDailyWorkout(uid) {
         if (!uid) return null;
         try {
-            const userSnap = await getDoc(doc(db, "users", uid));
-            if (!userSnap.exists() || !userSnap.data()?.quiz) return null;
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists() || !isQuizComplete(userSnap.data()?.quiz)) return null;
             const user = userSnap.data();
             const today = new Date();
             if (user.dailyWorkout?.date && isSameDay(user.dailyWorkout.date, today)) return user.dailyWorkout;
-            const progression = user.progression || { loadFactor: 1.0 };
-            const lastPerformance = user.performanceHistory?.slice(-1)[0];
-            const newWorkout = generateIntelligentWorkout(user.quiz, progression, user.workoutHistory || [], lastPerformance);
-            if (newWorkout) await updateDoc(doc(db, "users", uid), { dailyWorkout: newWorkout });
+            const newWorkout = generateIntelligentWorkout(user.quiz, user.adaptationFactor || 1.0);
+            if (newWorkout) await updateDoc(userRef, { dailyWorkout: newWorkout });
             return newWorkout;
         } catch (error) { console.error('Erro:', error); return null; }
     }
     
-    // 🔴 #4: Salvar performance completa
-    async function recordPerformance(difficulty, completionRate, timeSpent, setsCompletedTotal) {
-        if (!currentUser) return;
-        await updateDoc(doc(db, "users", currentUser.uid), {
-            performanceHistory: arrayUnion({ difficulty, completionRate, timeSpent, setsCompletedTotal, date: new Date().toISOString() })
-        });
-    }
-    
     async function completeWorkout() {
-        if (!requireAuth() || isProcessing) return;
-        const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-        const workout = userSnap.data()?.dailyWorkout;
-        if (!workout?.main.every(e => e.completed)) { showNotification('Complete todos os exercícios!', 'warning'); return; }
-        
+        if (!requireAuth('completeWorkout') || isProcessing || !isQuizComplete(userData?.quiz)) return;
         isProcessing = true;
         const btn = document.getElementById('completeWorkoutBtn');
-        btn.classList.add('btn-loading');
-        btn.disabled = true;
-        
+        setButtonLoading(btn, true);
         try {
-            const completedCount = workout.main.filter(e => e.completed).length;
-            const completionRate = completedCount / workout.main.length;
-            const setsCompletedTotal = workout.main.reduce((sum, e) => sum + (e.setsCompleted || 0), 0);
-            const newStreak = (userData?.streak || 0) + 1;
-            const newTotal = (userData?.totalWorkouts || 0) + 1;
-            let progression = userData?.progression || { loadFactor: 1.0 };
-            
-            // 🔴 #5: Ajuste inteligente baseado em performance
-            if (completionRate > 0.9) progression.loadFactor = Math.min(1.7, progression.loadFactor + 0.08);
-            else if (completionRate < 0.7) progression.loadFactor = Math.max(0.6, progression.loadFactor - 0.08);
-            progression.loadFactor = Math.min(1.7, Math.max(0.6, progression.loadFactor + 0.02));
-            
-            await updateDoc(doc(db, "users", currentUser.uid), {
+            const userRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            if (!userSnap.exists()) throw new Error('Dados não encontrados');
+            const user = userSnap.data();
+            const newStreak = (user.streak || 0) + 1;
+            const newTotal = (user.totalWorkouts || 0) + 1;
+            await updateDoc(userRef, {
                 streak: newStreak, totalWorkouts: newTotal, xp: increment(25),
-                progression: progression, lastWorkoutDate: new Date().toISOString(),
-                workoutHistory: arrayUnion({ date: new Date().toISOString(), workout: workout, performance: { completionRate, setsCompletedTotal } })
+                lastWorkoutDate: new Date().toISOString(),
+                workoutHistory: arrayUnion({ date: new Date().toISOString(), workout: user.dailyWorkout })
             });
-            
-            await recordPerformance('medium', completionRate, 45, setsCompletedTotal);
-            
-            // 🔴 #9: Email de treino concluído
-            if (typeof emailjs !== 'undefined') {
-                emailjs.send(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.TEMPLATE_ID, { to_email: currentUser.email, message: "Parabéns! Você concluiu seu treino de hoje 💪" }).catch(() => {});
-            }
-            
-            // 🔴 #10: Efeito visual WOW
-            const progressFill = document.getElementById('workoutProgressFill');
-            if (progressFill) { progressFill.style.width = '100%'; setTimeout(() => progressFill.style.width = '0%', 1000); }
-            
-            invalidateCache();
-            showNotification(`✅ Treino concluído! +25 XP`, 'success');
+            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+            showNotification('✅ Treino concluído! +25 XP', 'success');
             await loadUserData();
-            await getDailyWorkout(currentUser.uid);
             await displayWorkoutOfDay();
-            displayWeeklyPlan();
-            updateCoachMessage();
-            loadRanking();
-            updateChallenge();
-        } catch(e) { showNotification('Erro', 'error'); }
-        finally { btn.classList.remove('btn-loading'); btn.disabled = false; isProcessing = false; }
-    }
-    
-    async function adjustIntensity(feedback) {
-        if (!requireAuth()) return;
-        let progression = userData?.progression || { loadFactor: 1.0 };
-        progression.loadFactor = feedback === 'easy' ? Math.min(1.7, progression.loadFactor + 0.1) : Math.max(0.6, progression.loadFactor - 0.1);
-        await updateDoc(doc(db, "users", currentUser.uid), { progression });
-        await recordPerformance(feedback, 1.0, 0, 0);
-        invalidateCache();
-        showNotification(feedback === 'easy' ? '🚀 Intensidade aumentada!' : '🔄 Intensidade reduzida', 'success');
-        await displayWorkoutOfDay();
-    }
-    
-    async function regenerateWorkout() {
-        if (!requireAuth() || isProcessing) return;
-        isProcessing = true;
-        try {
-            const progression = userData?.progression || { loadFactor: 1.0 };
-            const lastPerformance = userData?.performanceHistory?.slice(-1)[0];
-            const newWorkout = generateIntelligentWorkout(userData?.quiz, progression, userData?.workoutHistory || [], lastPerformance);
-            await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: newWorkout });
-            invalidateCache();
-            await displayWorkoutOfDay();
-            showNotification('Novo treino gerado!', 'success');
-        } catch(e) { showNotification('Erro', 'error'); }
-        finally { isProcessing = false; }
-    }
-    
-    // 🔴 #6: SISTEMA DE RECOMENDAÇÃO AUTOMÁTICA
-    function getAutoRecommendation(userData) {
-        const streak = userData?.streak || 0;
-        const lastPerformance = userData?.performanceHistory?.slice(-1)[0];
-        const totalWorkouts = userData?.totalWorkouts || 0;
-        
-        if (streak >= 30) return "🏆 LENDA! Você está há 30+ dias! Continue com carga alta!";
-        if (streak >= 7) return "🔥 Incrível! 7+ dias seguidos! Hoje foque em aumentar a carga.";
-        if (streak === 0 && totalWorkouts === 0) return "💪 Bem-vindo! Seu primeiro treino te aguarda!";
-        if (streak === 0) return "🎯 Vamos retomar? Comece com intensidade moderada hoje.";
-        if (lastPerformance?.difficulty === 'hard') return "📉 Seu último treino foi difícil. Reduza um pouco a carga hoje.";
-        if (lastPerformance?.difficulty === 'easy') return "📈 Você está evoluindo! Aumente as repetições hoje.";
-        return "🏋️ Hoje foque em qualidade, não quantidade. Cada repetição conta!";
-    }
-    
-    // 🔴 #7: SISTEMA DE DESAFIOS
-    async function updateChallenge() {
-        const container = document.getElementById('challengeContainer');
-        if (!container) return;
-        const streak = userData?.streak || 0;
-        const challenge7Progress = Math.min(7, streak);
-        const challenge7Completed = streak >= 7;
-        const challenge30Progress = Math.min(30, streak);
-        const challenge30Completed = streak >= 30;
-        
-        container.innerHTML = `
-            <h4>🔥 Desafios Ativos</h4>
-            <div style="margin: 12px 0;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span>🏅 7 Dias Seguidos</span>
-                    <span>${challenge7Progress}/7</span>
-                </div>
-                <div class="workout-progress-container"><div class="workout-progress-fill" style="width:${(challenge7Progress/7)*100}%"></div></div>
-                ${challenge7Completed ? '<span style="color:#28a745;">✓ Concluído! +50 XP</span>' : ''}
-            </div>
-            <div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <span>💪 30 Dias Seguidos</span>
-                    <span>${challenge30Progress}/30</span>
-                </div>
-                <div class="workout-progress-container"><div class="workout-progress-fill" style="width:${(challenge30Progress/30)*100}%"></div></div>
-                ${challenge30Completed ? '<span style="color:#28a745;">✓ Concluído! +200 XP</span>' : ''}
-            </div>
-        `;
-        
-        if (streak === 7 && !userData?.challenge7Completed) {
-            await updateDoc(doc(db, "users", currentUser.uid), { xp: increment(50), challenge7Completed: true });
-            showNotification('🎉 Desafio 7 dias concluído! +50 XP', 'success');
-        }
-        if (streak === 30 && !userData?.challenge30Completed) {
-            await updateDoc(doc(db, "users", currentUser.uid), { xp: increment(200), challenge30Completed: true });
-            showNotification('🏆 Desafio 30 dias concluído! +200 XP', 'success');
+        } catch (error) { 
+            showNotification('Erro ao salvar treino', 'error');
+            console.error(error);
+        } finally { 
+            isProcessing = false; 
+            setButtonLoading(btn, false); 
         }
     }
     
-    // 🔴 #8: RANKING SIMPLES
-    async function loadRanking() {
-        try {
-            const usersRef = collection(db, "users");
-            const q = query(usersRef, orderBy("xp", "desc"), limit(5));
-            const snapshot = await getDocs(q);
-            const container = document.getElementById('rankingContainer');
-            if (!container) return;
-            
-            let rankingHtml = '';
-            let position = 1;
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                rankingHtml += `<div class="ranking-item">
-                    <span class="ranking-position">#${position}</span>
-                    <span class="ranking-name">@${data.username || 'user'}</span>
-                    <span class="ranking-xp">⭐ ${data.xp || 0} XP</span>
-                </div>`;
-                position++;
-            });
-            if (rankingHtml === '') rankingHtml = '<p>Carregando ranking...</p>';
-            container.innerHTML = rankingHtml;
-        } catch(e) { console.error('Erro ranking:', e); }
-    }
-    
-    // Funções auxiliares
-    function showLoading(show) { document.getElementById('loadingOverlay').classList.toggle('hide', !show); }
-    function showNotification(msg, type) { const n = document.createElement('div'); n.className = `notification ${type}`; n.textContent = msg; document.body.appendChild(n); setTimeout(() => n.remove(), 3000); }
-    function escapeHtml(t) { return t ? String(t).replace(/[&<>]/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>' : '&gt;' }[m]; }) : ''; }
-    function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-    function validateWeight(w) { const n = parseFloat(w); return !isNaN(n) && n > 20 && n < 500; }
-    function validateHeight(h) { const n = parseFloat(h); return !isNaN(n) && n > 50 && n < 300; }
-    function safeNumber(v, d = 0) { const n = parseFloat(v); return isNaN(n) ? d : n; }
-    function isQuizComplete(q) { return q && ['objetivo', 'nivel', 'frequencia', 'local', 'idade', 'sexo', 'tempoTreino', 'focoMuscular', 'altura', 'peso'].every(f => q[f] !== undefined); }
-    function requireAuth() { if (!currentUser?.uid) { showNotification('Faça login', 'error'); return false; } return true; }
-    function invalidateCache() { try { localStorage.removeItem(CACHE_KEY); } catch(e) {} }
-    function saveToCache(d) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ data: d, timestamp: Date.now(), userId: currentUser?.uid })); } catch(e) {} }
-    function getFromCache() { try { const c = localStorage.getItem(CACHE_KEY); if (!c) return null; const p = JSON.parse(c); if (p.userId !== currentUser?.uid || Date.now() - p.timestamp > 300000) return null; return p.data; } catch(e) { return null; } }
-    
-    // 🔴 #1: IA Interna melhorada
-    function getSmartCoachResponse(question, userData) {
-        const q = question.toLowerCase();
-        const goal = userData?.quiz?.objetivo || 'hipertrofia';
-        const level = userData?.quiz?.nivel || 'intermediario';
-        const streak = userData?.streak || 0;
-        const weight = userData?.currentWeight || 70;
-        
-        if (q.includes('treino')) {
-            if (goal === 'hipertrofia') return "💪 Foque em 8-12 reps com carga progressiva. Aumente quando conseguir 12 reps.";
-            if (goal === 'emagrecimento') return "🔥 Priorize 15-20 reps com descanso curto (45s). HIIT ajuda muito.";
-            return "🏃 Mantenha ritmo moderado e foque em consistência.";
-        }
-        if (q.includes('dieta') || q.includes('comer')) {
-            const protein = Math.round(weight * (goal === 'hipertrofia' ? 2.2 : 1.8));
-            if (goal === 'hipertrofia') return `🍗 Consuma ${protein}g de proteína/dia. Priorize frango, ovos e whey.`;
-            return `🥗 Déficit de 300-500kcal. ${protein}g de proteína para preservar massa.`;
-        }
-        if (q.includes('progresso') || q.includes('motivação')) {
-            if (streak >= 30) return `🏆 INCRÍVEL! ${streak} dias seguidos! Você é uma lenda!`;
-            if (streak >= 7) return `🔥 Você já tem ${streak} dias de streak! Continue assim!`;
-            return `💪 Vamos começar? Seu primeiro treino te aguarda!`;
-        }
-        return `🎯 ${goal === 'hipertrofia' ? 'Hipertrofia' : goal === 'emagrecimento' ? 'Emagrecimento' : 'Resistência'} é seu foco. ${streak > 0 ? `Você está há ${streak} dias seguidos!` : 'Que tal começar hoje?'}`;
-    }
-    
-    async function toggleExerciseComplete(idx, name) {
-        if (!requireAuth() || isProcessing) return;
-        isProcessing = true;
-        try {
-            const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-            if (!userSnap.exists()) return;
-            const workout = userSnap.data().dailyWorkout;
-            if (!workout) return;
-            workout.main[idx].completed = !workout.main[idx].completed;
-            if (workout.main[idx].completed && workout.main[idx].setsCompleted < workout.main[idx].sets) workout.main[idx].setsCompleted = workout.main[idx].sets;
-            await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: workout });
-            invalidateCache();
-            await displayWorkoutOfDay();
-        } catch(e) { showNotification('Erro', 'error'); }
-        finally { isProcessing = false; }
-    }
-    
-    async function toggleSetCompleted(exIdx, setIdx) {
-        if (!requireAuth() || isProcessing) return;
-        isProcessing = true;
-        try {
-            const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-            if (!userSnap.exists()) return;
-            const workout = userSnap.data().dailyWorkout;
-            if (!workout) return;
-            const ex = workout.main[exIdx];
-            if (!ex) return;
-            if (!ex.setsCompleted) ex.setsCompleted = 0;
-            ex.setsCompleted = setIdx + 1;
-            if (ex.setsCompleted === ex.sets) ex.completed = true;
-            await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: workout });
-            invalidateCache();
-            await displayWorkoutOfDay();
-        } catch(e) { showNotification('Erro', 'error'); }
-        finally { isProcessing = false; }
-    }
-    
+    // ========== CARREGAMENTO DE DADOS COM CACHE ==========
     async function loadUserData() {
         if (!currentUser?.uid) return;
+        
         const cached = getFromCache();
-        if (cached) { userData = cached; updateUI(); }
+        if (cached) {
+            userData = cached;
+            updateUI();
+        }
+        
         try {
-            const snap = await getDoc(doc(db, "users", currentUser.uid));
-            if (snap.exists()) { userData = snap.data(); saveToCache(userData); updateUI(); }
-        } catch(e) { console.error(e); }
+            const userRef = doc(db, "users", currentUser.uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                userData = userSnap.data();
+                saveToCache(userData);
+                updateUI();
+            } else {
+                console.warn('Documento do usuário não encontrado');
+                showNotification('Erro ao carregar dados do usuário', 'error');
+            }
+        } catch (error) { 
+            console.error('Erro ao carregar dados:', error);
+            showNotification('Erro ao carregar dados', 'error');
+        }
     }
     
     function updateUI() {
         if (!userData) return;
-        document.getElementById('profileUsernameDisplay').innerHTML = `@${userData.username || 'user'} ✏️`;
-        document.getElementById('imcValue').innerHTML = `IMC: ${userData.imc || '--'}`;
-        document.getElementById('weightValue').innerHTML = `Peso: ${formatWeight(userData.currentWeight)} kg`;
-        document.getElementById('xpTotal').innerHTML = userData.xp || 0;
-        document.getElementById('totalWorkouts').innerHTML = userData.totalWorkouts || 0;
-        const level = Math.floor((userData.xp || 0) / 100) + 1;
-        document.getElementById('levelDisplay').innerHTML = `Nível ${level}`;
-        document.getElementById('xpProgress').style.width = `${(userData.xp || 0) % 100}%`;
-        document.getElementById('streakBadge').innerHTML = `🔥 ${userData.streak || 0} dias`;
-        if (userData.streak >= 7) document.getElementById('streakBadge').style.animation = 'glow 1.5s infinite';
         
-        const badges = document.getElementById('badgesContainer');
-        if (badges) {
-            badges.innerHTML = '';
+        // 🔴 #6: Verificar elementos antes de usar
+        const usernameDisplay = document.getElementById('profileUsernameDisplay');
+        if (usernameDisplay) usernameDisplay.innerHTML = `@${userData.username || 'user'} ✏️`;
+        
+        const imcDisplay = document.getElementById('imcValue');
+        if (imcDisplay) imcDisplay.innerHTML = `IMC: ${userData.imc || '--'}`;
+        
+        const weightValue = document.getElementById('weightValue');
+        if (weightValue) {
+            // 🔴 #3: Verificação explícita de peso
+            const weight = userData?.currentWeight;
+            if (weight !== undefined && weight !== null && weight !== '') {
+                weightValue.innerHTML = `Peso: ${formatWeight(weight)} kg`;
+            } else {
+                weightValue.innerHTML = `Peso: -- kg`;
+            }
+        }
+        
+        const streakCount = document.getElementById('streakCount');
+        if (streakCount) streakCount.innerHTML = `${userData.streak || 0} dias`;
+        
+        const totalWorkouts = document.getElementById('totalWorkouts');
+        if (totalWorkouts) totalWorkouts.innerHTML = userData.totalWorkouts || 0;
+        
+        const xpTotal = document.getElementById('xpTotal');
+        if (xpTotal) xpTotal.innerHTML = userData.xp || 0;
+        
+        const level = Math.floor((userData.xp || 0) / 100) + 1;
+        const levelDisplay = document.getElementById('levelDisplay');
+        if (levelDisplay) levelDisplay.innerHTML = `Nível ${level}`;
+        
+        const xpProgress = document.getElementById('xpProgress');
+        if (xpProgress) xpProgress.style.width = `${(userData.xp || 0) % 100}%`;
+        
+        const badgesContainer = document.getElementById('badgesContainer');
+        if (badgesContainer) {
+            badgesContainer.innerHTML = '';
             const badgeList = [
-                { name: '🏅 Iniciante', condition: (userData.totalWorkouts || 0) >= 1 },
-                { name: '🔥 7 Dias', condition: (userData.streak || 0) >= 7 },
-                { name: '💪 Lenda', condition: (userData.streak || 0) >= 30 },
-                { name: '📈 Constância', condition: (userData.totalWorkouts || 0) >= 10 }
+                { id: 'first_workout', name: '🏅 Primeiro Passo' },
+                { id: '7day_streak', name: '🔥 Semana de Fogo' },
+                { id: '30day_streak', name: '💪 Lenda' },
+                { id: '10_workouts', name: '📈 Constância' }
             ];
-            badgeList.forEach(b => { badges.innerHTML += `<div class="stat-badge" style="${b.condition ? 'border-color:#ffd700;' : 'opacity:0.4;'}">${b.name} ${b.condition ? '✓' : '🔒'}</div>`; });
+            badgeList.forEach(b => {
+                const unlocked = userData.achievements?.includes(b.id);
+                badgesContainer.innerHTML += `<div class="badge ${unlocked ? '' : 'locked'}">${b.name} ${unlocked ? '✓' : '🔒'}</div>`;
+            });
         }
         
         if (userData.weightHistory?.length) drawCharts(userData.weightHistory);
-        const w = safeNumber(userData.currentWeight, 70);
-        document.getElementById('nutritionPlan').innerHTML = `<p>🔥 ${Math.round(w * 35)} kcal/dia</p><p>💪 ${Math.round(w * 2)}g proteína</p><p>🥑 Banana + Café</p><p>🍗 Whey + Batata</p>`;
-        displayWeeklyPlan();
-        updateGoalDisplay();
-        updateCoachMessage();
-        updateChallenge();
-        loadRanking();
-    }
-    
-    function drawCharts(history) {
-        const canvas = document.getElementById('weightChartCanvas');
-        if (!canvas) return;
-        const valid = history.filter(w => w && !isNaN(parseFloat(w.valor)));
-        if (weightChart) weightChart.destroy();
-        if (valid.length === 0) return;
-        weightChart = new Chart(canvas.getContext('2d'), { type: 'line', data: { labels: valid.map((_, i) => i + 1), datasets: [{ label: 'Peso (kg)', data: valid.map(w => parseFloat(w.valor)), borderColor: '#ff5e00', tension: 0.3 }] } });
-    }
-    
-    function generateWeeklyPlan(quiz) {
-        const frequency = quiz?.frequencia || 3;
-        const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-        if (frequency >= 4) {
-            return [
-                { day: 'Segunda', workout: '💪 Peito + Tríceps' }, { day: 'Terça', workout: '🦾 Costas + Bíceps' },
-                { day: 'Quarta', workout: '🦵 Pernas' }, { day: 'Quinta', workout: '🎯 Ombro + Core' },
-                { day: 'Sexta', workout: frequency >= 5 ? '🏋️ Full Body' : '😴 Descanso' },
-                { day: 'Sábado', workout: '🔥 Cardio' }, { day: 'Domingo', workout: '😴 Descanso' }
-            ];
-        } else {
-            return [
-                { day: 'Segunda', workout: '🏋️ Fullbody A' }, { day: 'Terça', workout: '😴 Descanso' },
-                { day: 'Quarta', workout: '🏋️ Fullbody B' }, { day: 'Quinta', workout: '😴 Descanso' },
-                { day: 'Sexta', workout: frequency >= 3 ? '🏋️ Fullbody C' : '😴 Descanso' },
-                { day: 'Sábado', workout: '🔥 Cardio Opcional' }, { day: 'Domingo', workout: '😴 Descanso' }
-            ];
+        
+        const weightNum = safeNumber(userData.currentWeight, 70);
+        const calories = Math.round(weightNum * (userData.quiz?.objetivo === 'emagrecimento' ? 30 : 35));
+        const protein = Math.round(weightNum * (userData.quiz?.objetivo === 'hipertrofia' ? 2.2 : 1.8));
+        const nutritionPlan = document.getElementById('nutritionPlan');
+        if (nutritionPlan) {
+            nutritionPlan.innerHTML = `🔥 ${calories} kcal | 💪 ${protein}g proteína<br>🥑 Banana + Café | 🍗 Whey + Batata`;
         }
     }
     
-    function displayWeeklyPlan() {
-        const container = document.getElementById('weeklyPlanContainer');
-        if (!container) return;
-        const plan = generateWeeklyPlan(userData?.quiz);
-        const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '').trim();
-        container.innerHTML = '<h4>📅 Esta semana</h4>' + plan.map(d => `<div class="week-day ${d.day === today ? 'today' : ''}"><span>${d.day}</span><span>${d.workout}</span></div>`).join('');
-    }
-    
-    function updateGoalDisplay() {
-        const container = document.getElementById('goalContainer');
-        if (!container) return;
-        const goal = userData?.goal || { workoutsPerWeek: 4 };
-        const workoutsThisWeek = userData?.workoutHistory?.filter(w => { const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7); return new Date(w.date) > weekAgo; }).length || 0;
-        const progress = Math.min(100, (workoutsThisWeek / goal.workoutsPerWeek) * 100);
-        container.innerHTML = `<div class="workout-progress-container"><div class="workout-progress-fill" style="width:${progress}%"></div></div>
-            <p>🎯 Meta: ${workoutsThisWeek}/${goal.workoutsPerWeek} treinos esta semana</p>`;
-    }
-    
-    function updateCoachMessage() {
-        const container = document.getElementById('coachMessageContainer');
-        if (container) container.innerHTML = `<p>💡 ${getAutoRecommendation(userData)}</p>`;
+    function drawCharts(weightHistory) {
+        const canvas = document.getElementById('weightChartCanvas');
+        if (!canvas) return;
+        const valid = (weightHistory || []).filter(w => w && !isNaN(parseFloat(w.valor)));
+        if (weightChart) weightChart.destroy();
+        if (valid.length === 0) return;
+        weightChart = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { 
+                labels: valid.map((_, i) => i + 1), 
+                datasets: [{ label: 'Peso (kg)', data: valid.map(w => parseFloat(w.valor)), borderColor: '#ff5e00', tension: 0.3 }] 
+            }
+        });
     }
     
     async function displayWorkoutOfDay() {
         if (!currentUser?.uid || isLoadingWorkout) return;
         isLoadingWorkout = true;
         try {
-            if (!isQuizComplete(userData?.quiz)) { document.getElementById('workoutOfDay').innerHTML = '<div class="empty-state">Complete o quiz primeiro</div>'; return; }
+            if (!isQuizComplete(userData?.quiz)) {
+                const container = document.getElementById('workoutOfDay');
+                if (container) container.innerHTML = '<p>⚠️ Complete o quiz para gerar seu treino!</p>';
+                return;
+            }
             const workout = await getDailyWorkout(currentUser.uid);
-            if (!workout) return;
-            
-            let completed = workout.main.filter(e => e.completed).length;
-            let progress = (completed / workout.main.length) * 100;
-            document.getElementById('workoutProgressFill').style.width = `${progress}%`;
-            document.getElementById('progressText').innerHTML = `${Math.round(progress)}% concluído (${completed}/${workout.main.length})`;
-            document.getElementById('completeWorkoutBtn').disabled = completed !== workout.main.length;
-            
-            let html = '<div class="workout-section"><h4>💪 TREINO</h4>';
-            workout.main.forEach((ex, idx) => {
-                html += `<div class="exercise-item ${ex.completed ? 'completed' : ''}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div class="set-dot" style="width:32px; height:32px; background:${ex.completed ? '#28a745' : '#2a2d3a'}; cursor:pointer;" onclick="window.toggleExercise(${idx}, '${escapeHtml(ex.name)}')">✓</div>
-                            <span class="exercise-name">${escapeHtml(ex.name)}</span>
-                            <span style="color:#ffaa70;">${ex.sets}x${ex.reps}</span>
-                        </div>
-                    </div>
-                    <div class="sets-control">`;
-                for (let s = 0; s < ex.sets; s++) {
-                    html += `<div class="set-dot ${s < (ex.setsCompleted || 0) ? 'completed' : ''}" onclick="window.toggleSet(${idx}, ${s})">${s + 1}</div>`;
-                }
-                html += `</div></div>`;
-            });
-            html += `</div>`;
-            document.getElementById('workoutOfDay').innerHTML = html;
-            window.toggleExercise = toggleExerciseComplete;
-            window.toggleSet = toggleSetCompleted;
-        } catch(e) { console.error(e); }
-        finally { isLoadingWorkout = false; }
+            const container = document.getElementById('workoutOfDay');
+            if (!workout) { 
+                if (container) container.innerHTML = '<p>Erro ao carregar treino.</p>'; 
+                return; 
+            }
+            if (container) {
+                container.innerHTML = `
+                    <p>📌 ${workout.sets}x${workout.reps}</p>
+                    <ul>${workout.exercises.map(ex => `<li>${escapeHtml(ex)}</li>`).join('')}</ul>
+                    <button id="completeWorkoutBtn" class="btn-primary">✅ Concluir treino</button>
+                `;
+                const completeBtn = document.getElementById('completeWorkoutBtn');
+                if (completeBtn) completeBtn.addEventListener('click', completeWorkout);
+            }
+        } catch (error) {
+            console.error('Erro ao exibir treino:', error);
+        } finally { 
+            isLoadingWorkout = false; 
+        }
     }
     
-    // Quiz
+    // ========== QUIZ ==========
     const quizQuestions = [
-        { id: 'objetivo', type: 'select', label: 'Objetivo?', options: ['hipertrofia', 'emagrecimento', 'resistencia'] },
+        { id: 'objetivo', type: 'select', label: 'Objetivo?', options: ['emagrecimento', 'hipertrofia', 'condicionamento'] },
         { id: 'nivel', type: 'select', label: 'Nível?', options: ['iniciante', 'intermediario', 'avancado'] },
         { id: 'frequencia', type: 'number', label: 'Dias/semana?', min: 1, max: 7 },
         { id: 'local', type: 'select', label: 'Local?', options: ['casa', 'academia'] },
         { id: 'idade', type: 'number', label: 'Idade?', min: 15, max: 100 },
         { id: 'sexo', type: 'select', label: 'Sexo?', options: ['masculino', 'feminino'] },
-        { id: 'tempoTreino', type: 'number', label: 'Tempo (min)?', min: 20, max: 120 },
-        { id: 'focoMuscular', type: 'select', label: 'Foco?', options: ['fullbody', 'peito', 'costas', 'pernas', 'ombros'] },
+        { id: 'tempoTreino', type: 'number', label: 'Minutos/treino?', min: 20, max: 120 },
+        { id: 'focoMuscular', type: 'select', label: 'Foco?', options: ['peito', 'pernas', 'costas', 'fullbody'] },
         { id: 'altura', type: 'number', label: 'Altura (cm)?', min: 100, max: 250 },
         { id: 'peso', type: 'number', label: 'Peso (kg)?', min: 30, max: 250 }
     ];
     
     function renderQuizStep() {
+        const container = document.getElementById('quizContainer');
         const q = quizQuestions[currentQuizStep];
         if (!q) { finishQuiz(); return; }
-        document.getElementById('quizContainer').innerHTML = `<div><h3>${escapeHtml(q.label)}</h3>` + (q.type === 'select' ? `<select id="quizAnswer">${q.options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('')}</select>` : `<input type="number" id="quizAnswer" min="${q.min}" max="${q.max}">`) + `</div>`;
+        if (container) {
+            container.innerHTML = `<div><h3>${escapeHtml(q.label)}</h3>` +
+                (q.type === 'select' ? `<select id="quizAnswer">${q.options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('')}</select>` :
+                `<input type="number" id="quizAnswer" min="${q.min}" max="${q.max}">`) + `</div>`;
+        }
     }
     
     async function finishQuiz() {
+        if (!requireAuth('finishQuiz')) return;
+        setButtonLoading(document.getElementById('nextQuizBtn'), true);
         try {
             const processed = {};
-            for (const [k, v] of Object.entries(quizAnswers)) {
-                const q = quizQuestions.find(q => q.id === k);
-                if (q?.type === 'number') processed[k] = parseFloat(v);
-                else processed[k] = v;
+            for (const [key, value] of Object.entries(quizAnswers)) {
+                const q = quizQuestions.find(q => q.id === key);
+                if (q?.type === 'number') {
+                    const num = parseFloat(value);
+                    if (isNaN(num)) throw new Error(`Valor inválido para ${q.label}`);
+                    processed[key] = num;
+                } else {
+                    processed[key] = value;
+                }
             }
+            if (!validateHeight(processed.altura) || !validateWeight(processed.peso)) {
+                throw new Error('Altura ou peso inválidos');
+            }
+            
             const imc = (processed.peso / ((processed.altura / 100) ** 2)).toFixed(1);
-            const workout = generateIntelligentWorkout(processed, { loadFactor: 1.0 }, []);
             await updateDoc(doc(db, "users", currentUser.uid), {
-                quiz: processed, imc, currentWeight: processed.peso, weightHistory: [{ data: new Date().toISOString(), valor: processed.peso }],
-                dailyWorkout: workout, progression: { loadFactor: 1.0 }, goal: { workoutsPerWeek: processed.frequencia, targetWeight: processed.peso }, xp: increment(100)
+                quiz: processed, imc, currentWeight: processed.peso,
+                weightHistory: [{ data: new Date().toISOString(), valor: processed.peso }],
+                adaptationFactor: 1.0, xp: increment(100)
             });
-            document.getElementById('quizModal').classList.add('hide');
+            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+            const quizModal = document.getElementById('quizModal');
+            if (quizModal) quizModal.classList.add('hide');
             showNotification('Quiz completo! +100 XP', 'success');
             await loadUserData();
             await displayWorkoutOfDay();
-            document.getElementById('mainApp').classList.remove('hide');
-        } catch(e) { showNotification(e.message, 'error'); }
+            const mainApp = document.getElementById('mainApp');
+            if (mainApp) mainApp.classList.remove('hide');
+        } catch (error) { 
+            showNotification(error.message, 'error');
+        } finally { 
+            setButtonLoading(document.getElementById('nextQuizBtn'), false); 
+        }
     }
     
-    // Eventos
-    document.getElementById('nextQuizBtn')?.addEventListener('click', () => {
-        const a = document.getElementById('quizAnswer');
-        if (!a?.value) { showNotification('Responda antes', 'warning'); return; }
-        quizAnswers[quizQuestions[currentQuizStep].id] = a.value;
+    function startTimer(seconds = 90) {
+        if (activeTimer) {
+            clearInterval(activeTimer);
+            activeTimer = null;
+        }
+        let sec = seconds;
+        const timerDisplay = document.getElementById('timerDisplay');
+        const startBtn = document.getElementById('startTimerBtn');
+        if (startBtn) startBtn.disabled = true;
+        activeTimer = setInterval(() => {
+            if (sec <= 0) {
+                if (activeTimer) {
+                    clearInterval(activeTimer);
+                    activeTimer = null;
+                }
+                if (timerDisplay) {
+                    timerDisplay.innerHTML = "⏰ Descanso concluído!";
+                    timerDisplay.style.color = "#00ff88";
+                }
+                if (startBtn) startBtn.disabled = false;
+            } else { 
+                if (timerDisplay) timerDisplay.innerHTML = `${sec}s`; 
+                sec--; 
+            }
+        }, 1000);
+    }
+    
+    // ========== EVENT LISTENERS ==========
+    document.getElementById('nextQuizBtn')?.addEventListener('click', async () => {
+        if (isProcessing) return;
+        
+        const answer = document.getElementById('quizAnswer');
+        if (!answer) return;
+        
+        // 🔴 #2: Validar input numérico do quiz
+        if (answer.type === 'number') {
+            const value = parseFloat(answer.value);
+            const min = parseFloat(answer.min);
+            const max = parseFloat(answer.max);
+            
+            if (isNaN(value)) {
+                showNotification('Digite um valor válido', 'warning');
+                return;
+            }
+            if (!isNaN(min) && value < min) {
+                showNotification(`Valor mínimo é ${min}`, 'warning');
+                return;
+            }
+            if (!isNaN(max) && value > max) {
+                showNotification(`Valor máximo é ${max}`, 'warning');
+                return;
+            }
+        }
+        
+        const answerValue = answer.value;
+        if (!answerValue || answerValue.trim() === '') {
+            showNotification('Responda antes de continuar', 'warning');
+            return;
+        }
+        
+        isProcessing = true;
+        quizAnswers[quizQuestions[currentQuizStep].id] = answerValue;
         currentQuizStep++;
-        currentQuizStep < quizQuestions.length ? renderQuizStep() : finishQuiz();
+        if (currentQuizStep < quizQuestions.length) {
+            renderQuizStep();
+        } else {
+            await finishQuiz();
+        }
+        isProcessing = false;
     });
     
     document.getElementById('askCoachBtn')?.addEventListener('click', async () => {
-        const q = document.getElementById('coachQuestion')?.value;
-        if (!q?.trim()) return;
-        const chat = document.getElementById('chatContainer');
-        chat.innerHTML += `<div class="message user"><div class="message-content">${escapeHtml(q)}</div></div>`;
-        document.getElementById('coachQuestion').value = '';
-        const response = getSmartCoachResponse(q, userData);
-        chat.innerHTML += `<div class="message bot"><div class="message-content">${response}</div></div>`;
-        chat.scrollTop = chat.scrollHeight;
-    });
-    
-    document.getElementById('feedbackEasy')?.addEventListener('click', () => adjustIntensity('easy'));
-    document.getElementById('feedbackHard')?.addEventListener('click', () => adjustIntensity('hard'));
-    document.getElementById('regenerateWorkoutBtn')?.addEventListener('click', regenerateWorkout);
-    document.getElementById('completeWorkoutBtn')?.addEventListener('click', completeWorkout);
-    document.getElementById('startTimerBtn')?.addEventListener('click', () => { let s = 90; const t = setInterval(() => { if (s <= 0) { clearInterval(t); document.getElementById('timerDisplay').innerHTML = 'Fim!'; } else document.getElementById('timerDisplay').innerHTML = `${s}s`; s--; }, 1000); });
-    document.getElementById('updateWeightBtn')?.addEventListener('click', async () => {
-        const w = prompt('Novo peso (kg):');
-        if (w && validateWeight(w)) {
-            await updateDoc(doc(db, "users", currentUser.uid), { currentWeight: parseFloat(w), weightHistory: arrayUnion({ data: new Date().toISOString(), valor: parseFloat(w) }) });
-            await loadUserData();
-            showNotification('Peso atualizado!', 'success');
+        const question = document.getElementById('coachQuestion')?.value;
+        if (!question?.trim()) { showNotification('Digite uma pergunta', 'warning'); return; }
+        if (isProcessing) return;
+        isProcessing = true;
+        setButtonLoading(document.getElementById('askCoachBtn'), true);
+        try {
+            const chat = document.getElementById('chatContainer');
+            if (!chat) {
+                console.error('Chat container não encontrado');
+                return;
+            }
+            
+            // 🔴 #1: Usar função controlada para adicionar mensagem
+            addChatMessage(chat, `<div class="message-content">${escapeHtml(question)}</div>`, true);
+            
+            const questionInput = document.getElementById('coachQuestion');
+            if (questionInput) questionInput.value = '';
+            
+            // Adicionar loading
+            const loadingId = Date.now();
+            addChatMessage(chat, `<div class="message-content"><div class="loading-spinner" style="width:20px;height:20px;"></div></div>`, false);
+            
+            const response = await askAI(question, userData);
+            
+            // Remover loading e adicionar resposta
+            if (chat.lastChild) chat.removeChild(chat.lastChild);
+            addChatMessage(chat, `<div class="message-content">${escapeHtml(response).replace(/\n/g, '<br>')}</div>`, false);
+            
+        } catch (error) {
+            console.error('Erro no chat:', error);
+            showNotification('Erro ao processar pergunta', 'error');
+        } finally { 
+            setButtonLoading(document.getElementById('askCoachBtn'), false); 
+            isProcessing = false; 
         }
     });
     
-    // Autenticação
+    document.getElementById('feedbackEasy')?.addEventListener('click', async () => {
+        if (!requireAuth('feedback') || !isQuizComplete(userData?.quiz) || isProcessing) return;
+        isProcessing = true;
+        try {
+            const newFactor = Math.min(1.7, (userData?.adaptationFactor || 1.0) + 0.1);
+            await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
+            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+            showNotification('Treino mais intenso!', 'success');
+            await displayWorkoutOfDay();
+        } catch (error) { 
+            showNotification('Erro ao ajustar treino', 'error');
+            console.error(error);
+        } finally { 
+            isProcessing = false; 
+        }
+    });
+    
+    document.getElementById('feedbackHard')?.addEventListener('click', async () => {
+        if (!requireAuth('feedback') || !isQuizComplete(userData?.quiz) || isProcessing) return;
+        isProcessing = true;
+        try {
+            const newFactor = Math.max(0.6, (userData?.adaptationFactor || 1.0) - 0.1);
+            await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
+            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+            showNotification('Treino mais leve', 'success');
+            await displayWorkoutOfDay();
+        } catch (error) { 
+            showNotification('Erro ao ajustar treino', 'error');
+            console.error(error);
+        } finally { 
+            isProcessing = false; 
+        }
+    });
+    
+    document.getElementById('regenerateWorkoutBtn')?.addEventListener('click', async () => {
+        if (!requireAuth('regenerate') || !isQuizComplete(userData?.quiz) || isProcessing) return;
+        isProcessing = true;
+        setButtonLoading(document.getElementById('regenerateWorkoutBtn'), true);
+        try {
+            const newWorkout = generateIntelligentWorkout(userData?.quiz, userData?.adaptationFactor || 1.0);
+            await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: newWorkout });
+            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+            await displayWorkoutOfDay();
+            showNotification('Novo treino gerado!', 'success');
+        } catch (error) { 
+            showNotification('Erro ao gerar novo treino', 'error');
+            console.error(error);
+        } finally { 
+            setButtonLoading(document.getElementById('regenerateWorkoutBtn'), false); 
+            isProcessing = false; 
+        }
+    });
+    
+    document.getElementById('updateWeightBtn')?.addEventListener('click', async () => {
+        if (!requireAuth('updateWeight')) return;
+        const newWeight = prompt('Novo peso (kg):');
+        if (newWeight && validateWeight(newWeight)) {
+            showLoading(true, 'Atualizando...');
+            try {
+                const altura = userData?.quiz?.altura;
+                if (!altura) { showNotification('Complete o quiz primeiro', 'warning'); return; }
+                const weightNum = parseFloat(newWeight);
+                const newImc = (weightNum / ((altura / 100) ** 2)).toFixed(1);
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    currentWeight: weightNum, imc: newImc,
+                    weightHistory: arrayUnion({ data: new Date().toISOString(), valor: weightNum })
+                });
+                invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+                await loadUserData();
+                showNotification('Peso atualizado!', 'success');
+            } catch (error) { 
+                showNotification('Erro ao atualizar peso', 'error');
+                console.error(error);
+            } finally { 
+                showLoading(false); 
+            }
+        } else if (newWeight) { 
+            showNotification('Peso inválido (20-500kg)', 'error'); 
+        }
+    });
+    
+    document.getElementById('profileUsernameDisplay')?.addEventListener('click', async () => {
+        if (!requireAuth('editUsername')) return;
+        const newUsername = prompt('Novo username (3-20 caracteres, letras/números/_)', userData?.username);
+        if (newUsername && newUsername !== userData?.username) {
+            if (!validateUsername(newUsername)) {
+                showNotification('Username inválido. Use 3-20 caracteres (letras, números, _)', 'error');
+                return;
+            }
+            showLoading(true, 'Atualizando username...');
+            try {
+                const oldUsername = userData?.username;
+                const result = await updateUsernameWithTransaction(newUsername, currentUser.uid, oldUsername);
+                if (result) {
+                    await loadUserData();
+                    showNotification(`Username alterado para @${result}`, 'success');
+                }
+            } catch (error) {
+                showNotification('Erro ao alterar username', 'error');
+                console.error(error);
+            } finally {
+                showLoading(false);
+            }
+        }
+    });
+    
+    document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+        const editUsername = document.getElementById('editUsername');
+        const editWeight = document.getElementById('editWeight');
+        const editHeight = document.getElementById('editHeight');
+        const editGoal = document.getElementById('editGoal');
+        if (editUsername) editUsername.value = userData?.username || '';
+        if (editWeight) editWeight.value = userData?.currentWeight || '';
+        if (editHeight) editHeight.value = userData?.quiz?.altura || '';
+        if (editGoal) editGoal.value = userData?.quiz?.objetivo || 'emagrecimento';
+        const modal = document.getElementById('editProfileModal');
+        if (modal) modal.classList.remove('hide');
+    });
+    
+    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
+        const newUsername = document.getElementById('editUsername')?.value.trim() || '';
+        const newWeight = parseFloat(document.getElementById('editWeight')?.value || '0');
+        const newHeight = parseFloat(document.getElementById('editHeight')?.value || '0');
+        const newGoal = document.getElementById('editGoal')?.value || 'emagrecimento';
+        
+        showLoading(true, 'Salvando alterações...');
+        
+        try {
+            if (newUsername && newUsername !== userData?.username && validateUsername(newUsername)) {
+                const oldUsername = userData?.username;
+                await updateUsernameWithTransaction(newUsername, currentUser.uid, oldUsername);
+            }
+            
+            const updates = {};
+            if (validateWeight(newWeight)) updates.currentWeight = newWeight;
+            if (validateHeight(newHeight) && userData?.quiz) {
+                updates['quiz.altura'] = newHeight;
+                const weight = validateWeight(newWeight) ? newWeight : (userData?.currentWeight || 70);
+                updates.imc = (weight / ((newHeight / 100) ** 2)).toFixed(1);
+            }
+            if (newGoal && userData?.quiz) updates['quiz.objetivo'] = newGoal;
+            
+            if (Object.keys(updates).length) {
+                await updateDoc(doc(db, "users", currentUser.uid), updates);
+                invalidateCache(); // 🔴 #4: Invalidar cache após atualização
+                await loadUserData();
+                showNotification('Perfil atualizado!', 'success');
+            }
+        } catch (error) {
+            showNotification('Erro ao salvar alterações', 'error');
+            console.error(error);
+        } finally {
+            showLoading(false);
+            const modal = document.getElementById('editProfileModal');
+            if (modal) modal.classList.add('hide');
+        }
+    });
+    
+    document.getElementById('closeProfileModal')?.addEventListener('click', () => {
+        const modal = document.getElementById('editProfileModal');
+        if (modal) modal.classList.add('hide');
+    });
+    
+    document.getElementById('startTimerBtn')?.addEventListener('click', () => startTimer(90));
+    
+    // ========== AUTENTICAÇÃO ==========
     document.getElementById('doEmailLogin')?.addEventListener('click', async () => {
-        const email = document.getElementById('loginEmail').value, pass = document.getElementById('loginPassword').value;
-        if (!email || !validateEmail(email)) { showNotification('Email inválido', 'error'); return; }
-        showLoading(true);
-        try { await signInWithEmailAndPassword(auth, email, pass); }
-        catch(e) { showNotification(getFirebaseErrorMessage(e), 'error'); }
-        finally { showLoading(false); }
+        if (isProcessing) return;
+        isProcessing = true;
+        setButtonLoading(document.getElementById('doEmailLogin'), true);
+        try {
+            const email = document.getElementById('loginEmail')?.value || '';
+            const pass = document.getElementById('loginPassword')?.value || '';
+            if (!email || !validateEmail(email)) { showNotification('Email inválido', 'error'); return; }
+            if (!pass || pass.length < 6) { showNotification('Senha deve ter 6+ caracteres', 'error'); return; }
+            showLoading(true, 'Entrando...');
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (e) { 
+            showNotification(getFirebaseErrorMessage(e), 'error');
+        } finally { 
+            showLoading(false); 
+            setButtonLoading(document.getElementById('doEmailLogin'), false); 
+            isProcessing = false; 
+        }
     });
     
     document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
-        showLoading(true);
+        if (isProcessing) return;
+        isProcessing = true;
+        setButtonLoading(document.getElementById('googleLoginBtn'), true);
         try {
-            const result = await signInWithPopup(auth, new GoogleAuthProvider());
-            if (typeof emailjs !== 'undefined') emailjs.send(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.TEMPLATE_ID, { to_email: result.user.email, message: "Bem-vindo ao BOSSFIT AI! 🎉" }).catch(() => {});
-        } catch(e) { showNotification(getFirebaseErrorMessage(e), 'error'); }
-        finally { showLoading(false); }
+            showLoading(true, 'Entrando com Google...');
+            await signInWithPopup(auth, new GoogleAuthProvider());
+        } catch (e) { 
+            showNotification(getFirebaseErrorMessage(e), 'error');
+        } finally { 
+            showLoading(false); 
+            setButtonLoading(document.getElementById('googleLoginBtn'), false); 
+            isProcessing = false; 
+        }
     });
     
     document.getElementById('doSignup')?.addEventListener('click', async () => {
-        const email = document.getElementById('signupEmail').value, pass = document.getElementById('signupPassword').value;
-        if (!email || !validateEmail(email)) { showNotification('Email inválido', 'error'); return; }
-        if (!pass || pass.length < 6) { showNotification('Senha mín 6', 'error'); return; }
-        showLoading(true);
+        if (isProcessing) return;
+        isProcessing = true;
+        setButtonLoading(document.getElementById('doSignup'), true);
         try {
+            const email = document.getElementById('signupEmail')?.value || '';
+            const pass = document.getElementById('signupPassword')?.value || '';
+            if (!email || !validateEmail(email)) { showNotification('Email inválido', 'error'); return; }
+            if (!pass || pass.length < 6) { showNotification('Senha deve ter 6+ caracteres', 'error'); return; }
+            showLoading(true, 'Criando conta...');
             const cred = await createUserWithEmailAndPassword(auth, email, pass);
             await sendEmailVerification(cred.user);
-            if (typeof emailjs !== 'undefined') emailjs.send(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.TEMPLATE_ID, { to_email: email, message: "Bem-vindo ao BOSSFIT AI! Complete o quiz para começar 💪" }).catch(() => {});
             showNotification('Conta criada! Verifique seu email.', 'success');
-        } catch(e) { showNotification(getFirebaseErrorMessage(e), 'error'); }
-        finally { showLoading(false); }
+        } catch (e) { 
+            showNotification(getFirebaseErrorMessage(e), 'error');
+        } finally { 
+            showLoading(false); 
+            setButtonLoading(document.getElementById('doSignup'), false); 
+            isProcessing = false; 
+        }
+    });
+    
+    document.getElementById('resendVerificationBtn')?.addEventListener('click', async () => {
+        if (!currentUser) return;
+        try {
+            await sendEmailVerification(currentUser);
+            showNotification('Email de verificação reenviado!', 'success');
+        } catch (e) {
+            showNotification('Erro ao reenviar verificação', 'error');
+            console.error(e);
+        }
     });
     
     document.getElementById('forgotPassLink')?.addEventListener('click', async () => {
         const email = prompt("Digite seu email");
-        if (email && validateEmail(email)) { try { await sendPasswordResetEmail(auth, email); showNotification("Email enviado!", 'success'); } catch(e) { showNotification(getFirebaseErrorMessage(e), 'error'); } }
+        if (email && validateEmail(email)) {
+            showLoading(true, 'Enviando...');
+            try { 
+                await sendPasswordResetEmail(auth, email); 
+                showNotification("Email enviado!", 'success'); 
+            } catch (e) { 
+                showNotification(getFirebaseErrorMessage(e), 'error'); 
+            } finally { 
+                showLoading(false); 
+            }
+        } else if (email) {
+            showNotification('Email inválido', 'error');
+        }
     });
     
-    document.getElementById('showLoginBtn')?.addEventListener('click', () => { document.getElementById('loginForm').classList.remove('hide'); document.getElementById('signupForm').classList.add('hide'); });
-    document.getElementById('showSignupBtn')?.addEventListener('click', () => { document.getElementById('loginForm').classList.add('hide'); document.getElementById('signupForm').classList.remove('hide'); });
-    document.getElementById('logoutBtn')?.addEventListener('click', () => auth.signOut());
+    document.getElementById('showLoginBtn')?.addEventListener('click', () => {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        if (loginForm) loginForm.classList.remove('hide');
+        if (signupForm) signupForm.classList.add('hide');
+    });
     
-    function getFirebaseErrorMessage(e) {
-        const m = { 'auth/email-already-in-use': 'Email já cadastrado', 'auth/invalid-email': 'Email inválido', 'auth/weak-password': 'Senha fraca', 'auth/user-not-found': 'Usuário não encontrado', 'auth/wrong-password': 'Senha incorreta' };
-        return m[e.code] || e.message;
-    }
+    document.getElementById('showSignupBtn')?.addEventListener('click', () => {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        if (loginForm) loginForm.classList.add('hide');
+        if (signupForm) signupForm.classList.remove('hide');
+    });
     
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (activeTimer) {
+            clearInterval(activeTimer);
+            activeTimer = null;
+        }
+        invalidateCache(); // 🔴 #4: Limpar cache no logout
+        auth.signOut();
+    });
+    
+    // ========== AUTH STATE HANDLER ==========
     onAuthStateChanged(auth, async (user) => {
         showLoading(true);
         try {
             if (user) {
                 currentUser = user;
-                const userSnap = await getDoc(doc(db, "users", user.uid));
-                if (!userSnap.exists()) await setDoc(doc(db, "users", user.uid), { email: user.email, createdAt: new Date().toISOString(), streak: 0, totalWorkouts: 0, xp: 0, achievements: [], progression: { loadFactor: 1.0 }, goal: { workoutsPerWeek: 4, targetWeight: 70 } });
-                await loadUserData();
-                if (!isQuizComplete(userData?.quiz)) {
-                    document.getElementById('authScreen').classList.add('hide');
-                    document.getElementById('mainApp').classList.add('hide');
-                    document.getElementById('quizModal').classList.remove('hide');
-                    currentQuizStep = 0; quizAnswers = {}; renderQuizStep();
+                
+                const isGoogleUser = (user.providerData || []).some(p => p?.providerId === 'google.com');
+                
+                const banner = document.getElementById('emailVerificationBanner');
+                if (!user.emailVerified && !isGoogleUser) {
+                    if (banner) banner.classList.remove('hide');
+                    showNotification("Verifique seu email para acessar todas as funcionalidades!", 'warning');
                 } else {
-                    document.getElementById('authScreen').classList.add('hide');
-                    document.getElementById('quizModal').classList.add('hide');
-                    document.getElementById('mainApp').classList.remove('hide');
+                    if (banner) banner.classList.add('hide');
+                }
+                
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    await setDoc(userRef, {
+                        email: user.email,
+                        createdAt: new Date().toISOString(),
+                        streak: 0, totalWorkouts: 0, xp: 0, achievements: []
+                    });
+                }
+                
+                await initializeUserUsername(user.uid, user.email);
+                await loadUserData();
+                
+                if (!isQuizComplete(userData?.quiz)) {
+                    const authScreen = document.getElementById('authScreen');
+                    const mainApp = document.getElementById('mainApp');
+                    const quizModal = document.getElementById('quizModal');
+                    if (authScreen) authScreen.classList.add('hide');
+                    if (mainApp) mainApp.classList.add('hide');
+                    if (quizModal) quizModal.classList.remove('hide');
+                    currentQuizStep = 0;
+                    quizAnswers = {};
+                    renderQuizStep();
+                } else {
+                    const authScreen = document.getElementById('authScreen');
+                    const quizModal = document.getElementById('quizModal');
+                    const mainApp = document.getElementById('mainApp');
+                    if (authScreen) authScreen.classList.add('hide');
+                    if (quizModal) quizModal.classList.add('hide');
+                    if (mainApp) mainApp.classList.remove('hide');
                     await displayWorkoutOfDay();
                 }
             } else {
-                document.getElementById('authScreen').classList.remove('hide');
-                document.getElementById('mainApp').classList.add('hide');
-                document.getElementById('quizModal').classList.add('hide');
+                const authScreen = document.getElementById('authScreen');
+                const mainApp = document.getElementById('mainApp');
+                const quizModal = document.getElementById('quizModal');
+                const banner = document.getElementById('emailVerificationBanner');
+                if (authScreen) authScreen.classList.remove('hide');
+                if (mainApp) mainApp.classList.add('hide');
+                if (quizModal) quizModal.classList.add('hide');
+                if (banner) banner.classList.add('hide');
                 currentUser = null;
+                userData = null;
+                if (activeTimer) {
+                    clearInterval(activeTimer);
+                    activeTimer = null;
+                }
             }
-        } catch(e) { console.error(e); }
-        finally { showLoading(false); }
+        } catch (error) {
+            console.error('Auth error:', error);
+            showNotification('Erro ao carregar aplicação', 'error');
+        } finally { 
+            showLoading(false); 
+        }
     });
 </script>
 </body>
