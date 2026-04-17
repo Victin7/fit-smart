@@ -1,19 +1,27 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>BOSSFIT | Academia Inteligente</title>
-  <!-- Google Fonts & Chart.js -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Firebase SDKs -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    
-    // Firebase Config - ATENÇÃO: Substitua pelas suas credenciais reais do Firebase
+<!-- 🔥 APENAS PARTE PRINCIPAL ALTERADA (SCRIPT) -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyD_vqgrdyTotubZaxa2rdUYaoUaZC1uCfk",
   authDomain: "fit-smart-65928.firebaseapp.com",
@@ -22,518 +30,196 @@ const firebaseConfig = {
   messagingSenderId: "166572903350",
   appId: "1:166572903350:web:24050ab69058095f708f17"
 };
-   
-    
-    // Inicialização
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-    
-    window.__firebase = { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion };
-  </script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let userData = null;
+const root = document.getElementById("root");
+
+//////////////////////////////////////////////////
+// 🔐 LOGIN COMPLETO
+//////////////////////////////////////////////////
+
+function renderLogin() {
+  root.innerHTML = `
+    <div class="card">
+      <h2>🔐 Entrar no BOSSFIT</h2>
+
+      <input id="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Senha">
+
+      <button id="loginEmail" class="btn">Entrar</button>
+      <button id="registerEmail" class="btn-outline">Criar conta</button>
+      <button id="resetPassword" class="btn-small">Esqueci senha</button>
+
+      <hr style="margin:15px 0">
+
+      <button id="googleLoginBtn" class="btn">Entrar com Google</button>
+
+      <div id="errorMsg" class="error-msg"></div>
+    </div>
+  `;
+
+  document.getElementById("loginEmail").onclick = loginEmail;
+  document.getElementById("registerEmail").onclick = registerEmail;
+  document.getElementById("resetPassword").onclick = resetPassword;
+
+  document.getElementById("googleLoginBtn").onclick = async () => {
+    await signInWithPopup(auth, provider);
+  };
+}
+
+async function loginEmail() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const user = await signInWithEmailAndPassword(auth, email, password);
+
+    if (!user.user.emailVerified) {
+      alert("Verifique seu email 📩");
+      return;
     }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0a0c0f;
-      color: #eef2ff;
-      line-height: 1.5;
-    }
-
-    /* Container principal */
-    .app-container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #0f1115;
-      min-height: 100vh;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5);
-    }
-
-    /* Cards e UI moderna */
-    .card {
-      background: #1a1e26;
-      border-radius: 28px;
-      padding: 1.5rem;
-      margin: 1rem;
-      backdrop-filter: blur(2px);
-      border: 1px solid rgba(255, 94, 0, 0.2);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
-    }
-
-    .btn {
-      background: linear-gradient(135deg, #ff5e00, #ff8c00);
-      border: none;
-      padding: 0.9rem 1.8rem;
-      border-radius: 60px;
-      font-weight: 700;
-      font-size: 1rem;
-      color: white;
-      cursor: pointer;
-      transition: 0.2s;
-      width: 100%;
-      text-align: center;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 2px solid #ff5e00;
-      color: #ff8c00;
-    }
-
-    .btn-small {
-      padding: 0.5rem 1.2rem;
-      font-size: 0.85rem;
-      width: auto;
-      background: linear-gradient(135deg, #ff5e00, #ff8c00);
-    }
-
-    .flex-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #ff8c00;
-    }
-
-    h2 {
-      font-size: 1.6rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #ffffff, #ff8c00);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 0.5rem;
-    }
-
-    .badge {
-      background: #ff5e00;
-      padding: 0.25rem 0.8rem;
-      border-radius: 40px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .workout-item {
-      background: #0f1119;
-      border-radius: 20px;
-      padding: 1rem;
-      margin-bottom: 0.8rem;
-      border-left: 4px solid #ff5e00;
-    }
-
-    .grid-days {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-      gap: 0.6rem;
-      margin-top: 1rem;
-    }
-
-    .day-card {
-      background: #232833;
-      text-align: center;
-      padding: 0.6rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    .day-active {
-      background: #ff5e00;
-      box-shadow: 0 0 12px #ff8c00;
-    }
-
-    input, select {
-      background: #0f1119;
-      border: 1px solid #2a2f3f;
-      padding: 0.8rem;
-      border-radius: 20px;
-      color: white;
-      width: 100%;
-      margin-top: 0.3rem;
-    }
-
-    .error-msg {
-      color: #ff5e7c;
-      font-size: 0.75rem;
-      margin-top: 0.3rem;
-    }
-
-    canvas {
-      max-height: 250px;
-      width: 100%;
-    }
-
-    .timer-box {
-      font-family: monospace;
-      font-size: 2rem;
-      font-weight: 800;
-      text-align: center;
-      background: #00000040;
-      border-radius: 40px;
-      padding: 0.5rem;
-      color: #ff8c00;
-    }
-
-    .logo-boss {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-    .logo-boss span {
-      color: #ff5e00;
-    }
-
-    @media (max-width: 480px) {
-      .card { margin: 0.8rem; padding: 1.2rem; }
-      h2 { font-size: 1.3rem; }
-    }
-  </style>
-</head>
-<body>
-<div id="root" class="app-container"></div>
-
-<script type="module">
-  // ----------------------------------------------
-  // BOSSFIT - Sistema de Academia Inteligente
-  // ----------------------------------------------
-  const { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion } = window.__firebase;
-  
-  let currentUser = null;
-  let userData = null;
-  let weightChart = null;
-  
-  const root = document.getElementById('root');
-  
-  function renderLogin() {
-    root.innerHTML = `
-      <div style="display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 2rem;">
-        <div class="card" style="text-align: center;">
-          <div class="logo-boss">BOSSFIT<span>🔥</span></div>
-          <p style="margin: 1rem 0; color: #a0afc0; font-weight: 500;">Treinos que evoluem com você. Resultados de elite.</p>
-          <button id="googleLoginBtn" class="btn" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" style="filter: invert(1);"> Entrar com Google
-          </button>
-        </div>
-      </div>
-    `;
-    document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch(e) { console.error(e); alert("Erro login: "+e.message); }
-    });
+  } catch (e) {
+    document.getElementById("errorMsg").innerText = e.message;
   }
-  
-  function renderQuiz() {
-    root.innerHTML = `
-      <div style="padding: 1rem;">
-        <div class="card">
-          <div class="logo-boss" style="font-size:1.5rem">BOSSFIT<span>⚡</span></div>
-          <h2>📋 Seu Quiz de Ativação</h2>
-          <p>Vamos construir seu treino sob medida</p>
-          <div id="quizForm">
-            <label>🎯 Objetivo</label>
-            <select id="objetivo"><option value="emagrecimento">🔥 Emagrecimento</option><option value="hipertrofia">💪 Hipertrofia</option><option value="condicionamento">⚡ Condicionamento</option></select>
-            <label>📊 Nível</label>
-            <select id="nivel"><option value="iniciante">🌱 Iniciante</option><option value="intermediario">🚀 Intermediário</option><option value="avancado">🏆 Avançado</option></select>
-            <label>📅 Frequência semanal</label>
-            <select id="frequencia"><option value="2-3">2-3 dias</option><option value="4-5">4-5 dias</option><option value="6">6 dias</option></select>
-            <label>🏠 Local</label>
-            <select id="local"><option value="academia">🏋️ Academia</option><option value="casa">🏡 Casa</option></select>
-            <label>⚠️ Limitações físicas (opcional)</label>
-            <input type="text" id="limitacoes" placeholder="ex: joelho, ombro, coluna">
-            <label>📏 Altura (cm) 140-220</label>
-            <input type="number" id="altura" min="140" max="220" placeholder="ex: 175">
-            <label>⚖️ Peso (kg) 35-200</label>
-            <input type="number" id="peso" min="35" max="200" placeholder="ex: 75.5">
-            <div id="quizError" class="error-msg"></div>
-            <button id="submitQuizBtn" class="btn" style="margin-top: 1.5rem;">🚀 Gerar Treino BOSSFIT</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('submitQuizBtn')?.addEventListener('click', async () => {
-      const objetivo = document.getElementById('objetivo').value;
-      const nivel = document.getElementById('nivel').value;
-      const freqRaw = document.getElementById('frequencia').value;
-      const local = document.getElementById('local').value;
-      const limitacoes = document.getElementById('limitacoes').value || "nenhuma";
-      let altura = parseFloat(document.getElementById('altura').value);
-      let peso = parseFloat(document.getElementById('peso').value);
-      const errorDiv = document.getElementById('quizError');
-      if (isNaN(altura) || altura < 140 || altura > 220) { errorDiv.innerText = "Altura inválida (140-220cm)"; return; }
-      if (isNaN(peso) || peso < 35 || peso > 200) { errorDiv.innerText = "Peso inválido (35-200kg)"; return; }
-      const imc = peso / ((altura/100)**2);
-      if (imc < 12 || imc > 50) { errorDiv.innerText = "IMC fora da faixa realista, verifique peso/altura."; return; }
-      const frequencia = parseInt(freqRaw.split('-')[0]);
-      const treinoGerado = gerarTreinoPersonalizado(objetivo, nivel, frequencia, local);
-      const agenda = gerarAgendaSemanal(frequencia);
-      const agora = new Date().toISOString();
-      const newUserData = {
-        uid: currentUser.uid,
-        nome: currentUser.displayName,
-        email: currentUser.email,
-        foto: currentUser.photoURL || "",
-        altura, peso, objetivo, nivel, frequencia, local,
-        treino: treinoGerado,
-        agendaSemanal: agenda,
-        historicoPeso: [{ peso, data: agora }],
-        totalTreinos: 0,
-        ultimoTreino: null,
-        limitacoes,
-        streak: 0,
-        ultimoCheckin: null,
-        adaptacaoFator: 1.0
-      };
-      await setDoc(doc(db, "usuarios", currentUser.uid), newUserData);
-      loadDashboard();
-    });
+}
+
+async function registerEmail() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const user = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(user.user);
+    alert("Conta criada! Verifique seu email 📩");
+  } catch (e) {
+    document.getElementById("errorMsg").innerText = e.message;
   }
-  
-  // Geração de treino BOSSFIT premium
-  function gerarTreinoPersonalizado(objetivo, nivel, freq, local) {
-    const baseExercicios = {
-      emagrecimento: { 
-        academia: ["Agachamento com Salto", "Leg Press 45°", "Supino Inclinado", "Remada Curvada", "Desenvolvimento com Halter", "Cardio HIIT 20min"], 
-        casa: ["Burpee Explosivo", "Agachamento", "Flexão de Braço", "Afundo", "Prancha Dinâmica", "Polichinelo"] 
-      },
-      hipertrofia: { 
-        academia: ["Supino Reto", "Rosca Direta", "Tríceps Corda", "Puxada Frontal", "Agachamento Livre", "Stiff", "Elevação Lateral"], 
-        casa: ["Flexão Diamante", "Tríceps Banco", "Rosca com Mochila", "Agachamento Búlgaro", "Elevação Pélvica", "Mergulho em Cadeira"] 
-      },
-      condicionamento: { 
-        academia: ["Burpee", "Corda Naval", "Corrida 5km", "Kettlebell Swing", "Box Jump", "Abdominal Remador", "Skipping"], 
-        casa: ["Burpee", "Mountain Climber", "Polichinelo", "Agachamento", "Prancha Dinâmica", "Jumping Jacks"] 
-      }
-    };
-    let lista = baseExercicios[objetivo]?.[local] || baseExercicios.emagrecimento.academia;
-    let series = nivel === "iniciante" ? 3 : (nivel === "intermediario" ? 4 : 5);
-    let repeticoes = objetivo === "hipertrofia" ? "8-12" : (objetivo === "emagrecimento" ? "15-20" : "12-15");
-    if (local === "casa" && objetivo === "hipertrofia") repeticoes = "12-15";
-    let treinoEstruturado = lista.map(ex => ({ nome: ex, series, repeticoes }));
-    return treinoEstruturado;
+}
+
+async function resetPassword() {
+  const email = document.getElementById("email").value;
+  await sendPasswordResetEmail(auth, email);
+  alert("Email enviado 📩");
+}
+
+//////////////////////////////////////////////////
+// 👤 USERNAME ÚNICO
+//////////////////////////////////////////////////
+
+function renderCriarUsername() {
+  root.innerHTML = `
+    <div class="card">
+      <h2>👤 Criar Username</h2>
+      <input id="usernameInput" placeholder="Ex: victin123">
+      <div id="userError" class="error-msg"></div>
+      <button id="saveUsername" class="btn">Continuar</button>
+    </div>
+  `;
+
+  document.getElementById("saveUsername").onclick = salvarUsername;
+}
+
+async function salvarUsername() {
+  const username = document.getElementById("usernameInput").value.toLowerCase();
+  const errorDiv = document.getElementById("userError");
+
+  if (!username || username.length < 3) {
+    errorDiv.innerText = "Nome inválido";
+    return;
   }
-  
-  function gerarAgendaSemanal(frequencia) {
-    const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
-    let agenda = {};
-    let diasTreino = frequencia === 2 ? [0,3] : frequencia === 3 ? [0,2,4] : frequencia === 4 ? [0,1,3,5] : [0,1,2,3,4];
-    if (frequencia === 6) diasTreino = [0,1,2,3,4,5];
-    for (let i=0; i<diasSemana.length; i++) {
-      agenda[diasSemana[i]] = diasTreino.includes(i) ? "💪 Treino BOSS" : "😴 Descanso Ativo";
-    }
-    return agenda;
+
+  const ref = doc(db, "usernames", username);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    errorDiv.innerText = "Nome já existe ❌";
+    return;
   }
-  
-  // IA Adaptativa BOSSFIT
-  async function adaptarTreinoPorFeedback(dificuldade) {
-    if (!userData) return;
-    let fator = userData.adaptacaoFator || 1.0;
-    if (dificuldade === "facil") fator = Math.min(1.7, fator + 0.12);
-    else if (dificuldade === "dificil") fator = Math.max(0.6, fator - 0.1);
-    else fator = fator;
-    let novoTreino = userData.treino.map(ex => {
-      let novasSeries = Math.floor(parseInt(ex.series) * fator);
-      if (novasSeries < 2) novasSeries = 2;
-      if (novasSeries > 6) novasSeries = 6;
-      return { ...ex, series: novasSeries };
-    });
-    await updateDoc(doc(db, "usuarios", currentUser.uid), { treino: novoTreino, adaptacaoFator: fator });
-    userData.treino = novoTreino;
-    userData.adaptacaoFator = fator;
-    loadDashboard();
+
+  await setDoc(ref, { uid: currentUser.uid });
+
+  await setDoc(doc(db, "usuarios", currentUser.uid), {
+    nome: currentUser.displayName,
+    username,
+    email: currentUser.email
+  });
+
+  loadDashboard();
+}
+
+//////////////////////////////////////////////////
+// 🏠 DASHBOARD (com alimentação melhorada)
+//////////////////////////////////////////////////
+
+function renderDashboard() {
+  root.innerHTML = `
+    <div class="card">
+      <h2>🔥 Bem-vindo ${userData.nome}</h2>
+      <p>@${userData.username}</p>
+
+      <p><strong>🍽️ Pré-treino:</strong>
+      ${userData.objetivo === "hipertrofia" ? "Banana + aveia + café ☕" :
+        userData.objetivo === "emagrecimento" ? "Café + ovo + fruta 🍎" :
+        "Carbo leve + hidratação 💧"}
+      </p>
+
+      <p><strong>🍽️ Pós-treino:</strong>
+      ${userData.objetivo === "hipertrofia" ? "Frango + arroz + creatina 💪" :
+        userData.objetivo === "emagrecimento" ? "Proteína + salada 🥗" :
+        "Proteína + carbo equilibrado ⚡"}
+      </p>
+
+      <button id="logoutBtn" class="btn-small">Sair</button>
+    </div>
+  `;
+
+  document.getElementById("logoutBtn").onclick = async () => {
+    await signOut(auth);
+    renderLogin();
+  };
+}
+
+//////////////////////////////////////////////////
+// 🔄 LOAD
+//////////////////////////////////////////////////
+
+async function loadDashboard() {
+  const ref = doc(db, "usuarios", currentUser.uid);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    userData = snap.data();
+    renderDashboard();
   }
-  
-  async function registrarTreinoConcluido(feedback = null) {
-    if (!currentUser || !userData) return;
-    const hoje = new Date().toDateString();
-    const ultimo = userData.ultimoTreino ? new Date(userData.ultimoTreino).toDateString() : null;
-    let novoStreak = userData.streak || 0;
-    if (ultimo === hoje) { alert("Você já registrou o treino de hoje! Bora descansar? 💪"); return; }
-    if (ultimo && (new Date() - new Date(userData.ultimoTreino)) <= 86400000*2) novoStreak += 1;
-    else novoStreak = 1;
-    const total = (userData.totalTreinos || 0) + 1;
-    const updates = {
-      totalTreinos: total,
-      ultimoTreino: new Date().toISOString(),
-      streak: novoStreak
-    };
-    await updateDoc(doc(db, "usuarios", currentUser.uid), updates);
-    userData.totalTreinos = total;
-    userData.streak = novoStreak;
-    userData.ultimoTreino = updates.ultimoTreino;
-    if (feedback) await adaptarTreinoPorFeedback(feedback);
-    loadDashboard();
-  }
-  
-  async function atualizarPeso(novoPeso) {
-    if (!currentUser || !userData) return;
-    const pesoNum = parseFloat(novoPeso);
-    if (isNaN(pesoNum) || pesoNum < 35 || pesoNum > 200) { alert("Peso inválido"); return; }
-    const historicoAtualizado = [...(userData.historicoPeso || []), { peso: pesoNum, data: new Date().toISOString() }];
-    await updateDoc(doc(db, "usuarios", currentUser.uid), { peso: pesoNum, historicoPeso: historicoAtualizado });
-    userData.peso = pesoNum;
-    userData.historicoPeso = historicoAtualizado;
-    loadDashboard();
-  }
-  
-  function calcularIMC(peso, alturaCm) {
-    const alturaM = alturaCm/100;
-    const imc = peso / (alturaM*alturaM);
-    let classificacao = "";
-    if (imc < 18.5) classificacao = "Abaixo do peso";
-    else if (imc < 25) classificacao = "Normal 🟢";
-    else if (imc < 30) classificacao = "Sobrepeso 🟡";
-    else classificacao = "Obesidade 🔴";
-    return { imc: imc.toFixed(1), classificacao };
-  }
-  
-  function renderDashboard() {
-    if (!userData) return;
-    const imcObj = calcularIMC(userData.peso, userData.altura);
-    const hojeSemana = new Date().toLocaleString('pt-br', { weekday: 'long' }).replace('-feira','').replace('ç','c').slice(0,3);
-    const nomeDiaMap = { "segunda":"Segunda","terça":"Terça","quarta":"Quarta","quinta":"Quinta","sexta":"Sexta","sábado":"Sábado","domingo":"Domingo"};
-    const diaHoje = nomeDiaMap[hojeSemana.toLowerCase()] || "Segunda";
-    const treinoHoje = userData.agendaSemanal?.[diaHoje] === "💪 Treino BOSS" ? userData.treino : null;
-    
-    root.innerHTML = `
-      <div style="padding: 1rem 0.5rem;">
-        <div class="card flex-row">
-          <div><img class="avatar" src="${userData.foto || 'https://ui-avatars.com/api/?background=ff5e00&color=fff&name='+userData.nome}" alt="avatar"></div>
-          <div><h3 style="font-weight:800">${userData.nome}</h3><span class="badge">🔥 STREAK ${userData.streak || 0} dias</span></div>
-          <button id="logoutBtn" class="btn-small btn-outline" style="border-color:#ff5e00">Sair</button>
-        </div>
-        <div class="card">
-          <div class="flex-row"><span>📊 IMC ${imcObj.imc}</span><span>${imcObj.classificacao}</span><span>🏆 ${userData.totalTreinos || 0} treinos</span></div>
-          <div class="flex-row" style="margin-top: 0.5rem;"><span>⚖️ ${userData.peso} kg</span><button id="updateWeightBtn" class="btn-small" style="width: auto; background:#333; border:1px solid #ff5e00;">+ Registrar Peso</button></div>
-        </div>
-        <div class="card">
-          <h2>🏋️ TREINO BOSS - ${diaHoje}</h2>
-          ${treinoHoje ? treinoHoje.map(ex => `<div class="workout-item"><strong>${ex.nome}</strong> • ${ex.series} séries x ${ex.repeticoes} reps</div>`).join('') : '<p style="text-align:center;">😴 Dia de descanso estratégico. Mobilidade e caminhada leve.</p>'}
-          ${treinoHoje ? `<div style="margin: 1rem 0;"><button id="completeWorkoutBtn" class="btn">✅ Concluir Treino BOSS</button></div>` : ''}
-          <div id="feedbackArea" style="display: none; margin-top: 1rem;">
-            <p style="font-weight:600;">Como foi o treino de hoje?</p>
-            <div class="flex-row"><button id="feedbackFacil" class="btn-small" style="background:#00b4d8;">💚 Fácil</button><button id="feedbackMedio" class="btn-small" style="background:#ffaa00;">💛 Médio</button><button id="feedbackDificil" class="btn-small" style="background:#ff4d4d;">❤️‍🔥 Difícil</button></div>
-          </div>
-          <div id="timerSection" style="margin-top: 1rem; display: none;">
-            <div class="timer-box" id="timerDisplay">01:30</div>
-            <button id="resetTimerBtn" class="btn-small btn-outline">⏱️ Resetar 90s</button>
-          </div>
-        </div>
-        <div class="card">
-          <h2>📅 Agenda Semanal BOSS</h2>
-          <div class="grid-days">
-            ${Object.entries(userData.agendaSemanal).map(([dia, status]) => `<div class="day-card ${status.includes('Treino') && dia === diaHoje ? 'day-active' : ''}">${dia}<br>${status === '💪 Treino BOSS' ? '🏋️' : '🧘'}</div>`).join('')}
-          </div>
-        </div>
-        <div class="card">
-          <h2>📈 Evolução de Peso</h2>
-          <canvas id="weightChartCanvas" width="400" height="200"></canvas>
-        </div>
-        <div class="card">
-          <p><strong>🍽️ Dica BOSSFIT:</strong> ${userData.objetivo === 'emagrecimento' ? 'Déficit calórico moderado + alta proteína. Beba água!' : userData.objetivo === 'hipertrofia' ? 'Superávit limpo, 2.2g proteína/kg. Creatina recomendada.' : 'Carboidratos complexos antes do treino, recuperação com proteína.'}</p>
-          <p><strong>🔥 Calorias diárias estimadas:</strong> ${Math.round(28 * userData.peso)} kcal</p>
-          <p><strong>🤖 IA Adaptativa:</strong> Nível de carga ${Math.round((userData.adaptacaoFator || 1.0)*100)}%</p>
-        </div>
-      </div>
-    `;
-    
-    document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); renderLogin(); });
-    document.getElementById('updateWeightBtn')?.addEventListener('click', () => {
-      let novoPeso = prompt("Atualize seu peso atual (kg):", userData.peso);
-      if (novoPeso) atualizarPeso(novoPeso);
-    });
-    if (treinoHoje) {
-      document.getElementById('completeWorkoutBtn')?.addEventListener('click', () => {
-        const feedbackDiv = document.getElementById('feedbackArea');
-        const timerDiv = document.getElementById('timerSection');
-        if (feedbackDiv) feedbackDiv.style.display = 'block';
-        if (timerDiv) timerDiv.style.display = 'block';
-        startTimer();
-        document.getElementById('feedbackFacil')?.addEventListener('click', () => { registrarTreinoConcluido("facil"); });
-        document.getElementById('feedbackMedio')?.addEventListener('click', () => { registrarTreinoConcluido("medio"); });
-        document.getElementById('feedbackDificil')?.addEventListener('click', () => { registrarTreinoConcluido("dificil"); });
-      });
-    }
-    drawWeightChart();
-  }
-  
-  let timerInterval;
-  function startTimer() {
-    let timeLeft = 90;
-    const timerDisplay = document.getElementById('timerDisplay');
-    if (!timerDisplay) return;
-    if (timerInterval) clearInterval(timerInterval);
-    const updateTimer = () => {
-      let minutes = Math.floor(timeLeft / 60);
-      let seconds = timeLeft % 60;
-      timerDisplay.innerText = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
-      if (timeLeft <= 0) clearInterval(timerInterval);
-      timeLeft--;
-    };
-    updateTimer();
-    timerInterval = setInterval(updateTimer, 1000);
-    document.getElementById('resetTimerBtn')?.addEventListener('click', () => { timeLeft = 90; updateTimer(); });
-  }
-  
-  function drawWeightChart() {
-    const canvas = document.getElementById('weightChartCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const historico = userData.historicoPeso || [];
-    const labels = historico.slice(-7).map(h => new Date(h.data).toLocaleDateString());
-    const dataPoints = historico.slice(-7).map(h => h.peso);
-    if (weightChart) weightChart.destroy();
-    weightChart = new Chart(ctx, {
-      type: 'line',
-      data: { labels, datasets: [{ label: 'Peso (kg)', data: dataPoints, borderColor: '#ff5e00', backgroundColor: '#ff5e0020', tension: 0.3, fill: true, pointBackgroundColor: '#ff8c00' }] },
-      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { grid: { color: '#2a2f3f' } } } }
-    });
-  }
-  
-  async function loadDashboard() {
-    if (!currentUser) return;
-    const docRef = doc(db, "usuarios", currentUser.uid);
-    const snap = await getDoc(docRef);
+}
+
+//////////////////////////////////////////////////
+// 🔥 AUTH STATE
+//////////////////////////////////////////////////
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+
+    const ref = doc(db, "usuarios", user.uid);
+    const snap = await getDoc(ref);
+
     if (snap.exists()) {
       userData = snap.data();
       renderDashboard();
     } else {
-      renderQuiz();
+      renderCriarUsername();
     }
+
+  } else {
+    renderLogin();
   }
-  
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUser = user;
-      const docRef = doc(db, "usuarios", user.uid);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        userData = snap.data();
-        renderDashboard();
-      } else {
-        renderQuiz();
-      }
-    } else {
-      currentUser = null;
-      userData = null;
-      renderLogin();
-    }
-  });
+});
 </script>
-</body>
-</html>
