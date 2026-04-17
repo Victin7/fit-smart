@@ -14,27 +14,21 @@
     import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
     // Firebase Config - ATENÇÃO: Substitua pelas suas credenciais reais do Firebase
-  const firebaseConfig = {
+ const firebaseConfig = {
   apiKey: "AIzaSyD_vqgrdyTotubZaxa2rdUYa0UaZC1uCfk",
   authDomain: "fit-smart-65928.firebaseapp.com",
   projectId: "fit-smart-65928",
   storageBucket: "fit-smart-65928.firebasestorage.app",
   messagingSenderId: "166572903350",
   appId: "1:166572903350:web:24050ab69058095f708f17"
-};,
-      authDomain: "bossfit-fitness.firebaseapp.com",
-      projectId: "bossfit-fitness",
-      storageBucket: "bossfit-fitness.appspot.com",
-      messagingSenderId: "987654321012",
-      appId: "1:987654321012:web:bossfit123456"
-    };
+};
+   
     
     // Inicialização
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
-signInWithPopup(auth, provider)
     
     window.__firebase = { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion };
   </script>
