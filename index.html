@@ -1,1397 +1,539 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BOSSFIT | AI Fitness Coach</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #eef2ff; overflow-x: hidden; }
-        
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(4px);
-        }
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 94, 0, 0.3);
-            border-top-color: #ff5e00;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        .loading-text { margin-top: 16px; color: #ff9f6e; font-weight: 500; }
-        .btn-loading { position: relative; pointer-events: none; opacity: 0.7; }
-        .btn-loading::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            top: 50%;
-            left: 50%;
-            margin-left: -8px;
-            margin-top: -8px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        .app-container { max-width: 1400px; margin: 0 auto; padding: 20px 24px 40px; }
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
-            background: rgba(18, 20, 28, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 48px;
-            padding: 12px 28px;
-            border: 1px solid rgba(255, 94, 0, 0.2);
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-        }
-        .logo { font-size: 1.9rem; font-weight: 800; background: linear-gradient(135deg, #ff7b2c, #ff5e00); -webkit-background-clip: text; background-clip: text; color: transparent; cursor: pointer; }
-        .nav-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
-        .btn-outline-light {
-            background: transparent;
-            border: 1px solid #ff7b2c;
-            color: #ff9f6e;
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-outline-light:hover:not(:disabled) { background: rgba(255, 94, 0, 0.2); border-color: #ff5e00; transform: translateY(-2px); }
-        .btn-outline-light:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-primary {
-            background: linear-gradient(105deg, #ff5e00, #ff8c42);
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-weight: 700;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(255, 94, 0, 0.3);
-        }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 94, 0, 0.4); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .card {
-            background: #14161f;
-            border-radius: 32px;
-            padding: 24px;
-            margin-bottom: 24px;
-            border: 1px solid #262a36;
-            transition: all 0.3s;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
-        .card:hover { transform: translateY(-4px); border-color: #ff5e00; }
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
-        .username-badge { background: #ff5e0022; padding: 6px 12px; border-radius: 30px; font-size: 0.85rem; font-weight: 500; color: #ffaa70; cursor: pointer; transition: all 0.2s; }
-        .username-badge:hover { background: #ff5e0044; transform: scale(1.02); }
-        input, select, textarea {
-            background: #1e2029;
-            border: 1px solid #2d313e;
-            padding: 12px 16px;
-            border-radius: 24px;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            width: 100%;
-            margin-bottom: 14px;
-            transition: 0.2s;
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #ff5e00; box-shadow: 0 0 0 2px rgba(255,94,0,0.3); }
-        .chat-container { 
-            height: 400px; 
-            overflow-y: auto; 
-            padding: 16px; 
-            background: #0f1118; 
-            border-radius: 24px; 
-            margin-bottom: 16px;
-            display: flex;
-            flex-direction: column;
-        }
-        .message { margin-bottom: 16px; display: flex; animation: fadeInUp 0.3s ease-out; }
-        .message.user { justify-content: flex-end; }
-        .message.bot { justify-content: flex-start; }
-        .message-content { max-width: 70%; padding: 12px 18px; border-radius: 20px; word-wrap: break-word; white-space: pre-wrap; }
-        .message.user .message-content { background: linear-gradient(135deg, #ff5e00, #ff8c42); color: white; }
-        .message.bot .message-content { background: #1e2029; border: 1px solid #ff5e00; }
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #ffd70020, #ffa50020);
-            border: 1px solid #ffd700;
-            border-radius: 40px;
-            padding: 8px 16px;
-            margin: 4px;
-            font-size: 0.85rem;
-        }
-        .badge.locked { opacity: 0.4; filter: grayscale(0.5); }
-        .level-bar { background: #2a2d3a; border-radius: 20px; height: 8px; overflow: hidden; margin: 12px 0; }
-        .level-progress { background: linear-gradient(90deg, #ff5e00, #ff8c42); height: 100%; transition: width 0.5s ease; }
-        .timer-btn { background: #ff5e00; border: none; border-radius: 60px; padding: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
-        .timer-btn:hover:not(:disabled) { transform: scale(1.02); }
-        .notification {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: #ff5e00;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            z-index: 1000;
-            animation: fadeInUp 0.3s ease-out;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        .notification.error { background: #dc3545; }
-        .notification.success { background: #28a745; }
-        .notification.warning { background: #ffc107; color: #000; }
-        @media (max-width: 680px) {
-            .app-container { padding: 16px; }
-            .navbar { flex-direction: column; gap: 12px; }
-            .message-content { max-width: 85%; }
-        }
-        .hide { display: none; }
-        .error-text { color: #ff8080; font-size: 0.8rem; margin-top: -8px; margin-bottom: 12px; }
-        .quiz-question { animation: fadeInUp 0.3s ease-out; }
-        
-        .email-verification-banner {
-            background: #ffc10722;
-            border: 1px solid #ffc107;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-<div class="app-container" id="appRoot">
-    <div id="loadingOverlay" class="loading-overlay hide">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Carregando...</div>
-    </div>
-
-    <div id="authScreen">
-        <div class="navbar">
-            <div class="logo">⚡ BOSSFIT AI</div>
-            <div class="nav-buttons">
-                <button class="btn-outline-light" id="showLoginBtn">Login</button>
-                <button class="btn-primary" id="showSignupBtn">Criar conta</button>
-            </div>
-        </div>
-        <div class="card" style="max-width: 500px; margin: 0 auto;">
-            <div id="loginForm">
-                <h2 style="margin-bottom: 20px;">Acessar <span style="color:#ff5e00;">BOSSFIT AI</span></h2>
-                <input type="email" id="loginEmail" placeholder="seu@email.com">
-                <div class="error-text" id="loginEmailError"></div>
-                <input type="password" id="loginPassword" placeholder="senha">
-                <div class="error-text" id="loginPasswordError"></div>
-                <button class="btn-primary" id="doEmailLogin" style="width:100%">Entrar</button>
-                <button class="btn-outline-light" id="googleLoginBtn" style="width:100%; margin-top:12px;">🔐 Entrar com Google</button>
-                <p style="margin-top: 16px; text-align:center"><a href="#" id="forgotPassLink" style="color:#ff9f6e;">Esqueci a senha</a></p>
-            </div>
-            <div id="signupForm" class="hide">
-                <h2>Criar conta</h2>
-                <input type="email" id="signupEmail" placeholder="Email">
-                <div class="error-text" id="signupEmailError"></div>
-                <input type="password" id="signupPassword" placeholder="Senha (mínimo 6)">
-                <div class="error-text" id="signupPasswordError"></div>
-                <button class="btn-primary" id="doSignup">Cadastrar</button>
-                <div id="signupError" class="error-text"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="mainApp" class="hide">
-        <div class="navbar">
-            <div class="logo">🏋️ BOSSFIT AI</div>
-            <div>
-                <span id="profileUsernameDisplay" class="username-badge">@carregando... ✏️</span>
-                <span id="levelDisplay" class="username-badge" style="background:#ff5e0033;">Nível 1</span>
-                <button id="logoutBtn" class="btn-outline-light" style="margin-left:12px;">Sair</button>
-            </div>
-        </div>
-
-        <div id="emailVerificationBanner" class="email-verification-banner hide">
-            <p>📧 Verifique seu email para acessar todas as funcionalidades!</p>
-            <button id="resendVerificationBtn" class="btn-outline-light" style="margin-top:8px;">Reenviar verificação</button>
-        </div>
-
-        <div class="grid-2">
-            <div class="card">
-                <h3>📊 Seu Progresso</h3>
-                <div class="level-bar">
-                    <div class="level-progress" id="xpProgress" style="width: 0%"></div>
-                </div>
-                <p id="imcValue">IMC: --</p>
-                <p id="weightValue">Peso: -- kg <button id="updateWeightBtn" class="btn-outline-light" style="padding: 4px 12px; font-size: 0.8rem;">✏️</button></p>
-                <button id="editProfileBtn" class="btn-outline-light" style="width:100%; margin-top:8px;">✏️ Editar Perfil</button>
-            </div>
-            <div class="card">
-                <h3>🔥 Streak & Conquistas</h3>
-                <p id="streakCount">0 dias consecutivos</p>
-                <p>🏆 Total treinos: <span id="totalWorkouts">0</span></p>
-                <p>⭐ XP Total: <span id="xpTotal">0</span></p>
-                <div id="badgesContainer"></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>📈 Evolução</h3>
-            <canvas id="weightChartCanvas" height="120"></canvas>
-        </div>
-
-        <div class="card">
-            <h3>🏋️ Treino Inteligente do Dia</h3>
-            <div id="workoutOfDay"></div>
-            <div class="feedback-group" style="margin-top: 16px;">
-                <button id="feedbackEasy" class="btn-outline-light">Fácil ➕</button>
-                <button id="feedbackHard" class="btn-outline-light">Difícil ➖</button>
-                <button id="regenerateWorkoutBtn" class="btn-outline-light">🔄 Gerar novo treino</button>
-            </div>
-        </div>
-
-        <div class="grid-2">
-            <div class="card">
-                <h3>⏱️ Timer de Descanso</h3>
-                <p id="timerDisplay" style="font-size: 2rem; font-weight: bold;">90s</p>
-                <button id="startTimerBtn" class="timer-btn">Iniciar 90s</button>
-            </div>
-            <div class="card">
-                <h3>🍽️ Plano Alimentar</h3>
-                <div id="nutritionPlan"></div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3>🤖 Coach IA (Chat Inteligente)</h3>
-            <div class="chat-container" id="chatContainer">
-                <div class="message bot">
-                    <div class="message-content">👋 Olá! Sou seu coach IA. Pergunte qualquer coisa sobre treino, dieta ou progresso!</div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 12px;">
-                <input type="text" id="coachQuestion" placeholder="Digite sua pergunta..." style="flex: 1;">
-                <button id="askCoachBtn" class="btn-primary">Enviar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Edição de Perfil -->
-    <div id="editProfileModal" class="hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:1200; overflow-y:auto;">
-        <div class="card" style="max-width:500px; max-height:90vh; overflow-y:auto;">
-            <h2>✏️ Editar Perfil</h2>
-            <input type="text" id="editUsername" placeholder="Novo username">
-            <input type="number" id="editWeight" placeholder="Peso (kg)" step="0.1">
-            <input type="number" id="editHeight" placeholder="Altura (cm)">
-            <select id="editGoal">
-                <option value="emagrecimento">Emagrecimento</option>
-                <option value="hipertrofia">Hipertrofia</option>
-                <option value="condicionamento">Condicionamento</option>
-            </select>
-            <button id="saveProfileBtn" class="btn-primary">Salvar Alterações</button>
-            <button id="closeProfileModal" class="btn-outline-light" style="margin-top:8px;">Cancelar</button>
-        </div>
-    </div>
-
-    <!-- Quiz Modal -->
-    <div id="quizModal" class="hide" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); align-items:center; justify-content:center; z-index:1100; overflow-y:auto;">
-        <div class="card" style="max-width:600px; max-height:90vh; overflow-y:auto;">
-            <h2>📋 Quiz Inteligente BOSSFIT</h2>
-            <div id="quizContainer"></div>
-            <button id="nextQuizBtn" class="btn-primary" style="width:100%; margin-top:16px;">Próximo</button>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, Timestamp, increment, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>BOSSFIT | Academia Inteligente</title>
+  <!-- Google Fonts & Chart.js -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
-    // ========== FIREBASE SECURITY RULES ==========
-    /*
-    rules_version = '2';
-    service cloud.firestore {
-      match /databases/{database}/documents {
-        // Usuários só acessam seus próprios dados
-        match /users/{userId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // Usernames: leitura pública para verificação, escrita apenas autenticada
-        match /usernames/{username} {
-          allow read: if true;
-          allow write: if request.auth != null;
-        }
-        
-        match /{document=**} {
-          allow read, write: if false;
-        }
-      }
-    }
+    // Firebase Config - ATENÇÃO: Substitua pelas suas credenciais reais do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyD_vqgrdyTotubZaxa2rdUYaoUaZC1uCfk",
+  authDomain: "fit-smart-65928.firebaseapp.com",
+  projectId: "fit-smart-65928",
+  storageBucket: "fit-smart-65928.appspot.com",
+  messagingSenderId: "166572903350",
+  appId: "1:166572903350:web:24050ab69058095f708f17"
+};
+   
     
-    // 🔴 #5: Configurações de segurança no Firebase Console:
-    // - Domínios autorizados: adicionar apenas domínios confiáveis
-    // - API Key: restringir por HTTP referrer
-    */
-    
-    const firebaseConfig = {
-        apiKey: "AIzaSyD_vqgrdyTotubZaxa2rdUYaoUaZC1uCfk",
-        authDomain: "fit-smart-65928.firebaseapp.com",
-        projectId: "fit-smart-65928",
-        storageBucket: "fit-smart-65928.appspot.com",
-        messagingSenderId: "166572903350",
-        appId: "1:166572903350:web:24050ab69058095f708f17"
-    };
-    
+    // Inicialização
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
     
-    // ========== ESTADO GLOBAL ==========
-    let currentUser = null;
-    let userData = null;
-    let currentQuizStep = 0;
-    let quizAnswers = {};
-    let weightChart = null;
-    let activeTimer = null;
-    let isProcessing = false;
-    let isLoadingWorkout = false;
-    
-    // Cache
-    const CACHE_KEY = 'bossfit_user_cache';
-    const MAX_CHAT_MESSAGES = 50; // 🔴 #1: Limite de mensagens no chat
-    
-    // ========== UTILITÁRIOS ==========
-    function showLoading(show, text = 'Carregando...') {
-        const overlay = document.getElementById('loadingOverlay');
-        const loadingText = overlay?.querySelector('.loading-text');
-        if (overlay) {
-            if (show) {
-                if (loadingText) loadingText.textContent = text;
-                overlay.classList.remove('hide');
-            } else {
-                overlay.classList.add('hide');
-            }
-        }
+    window.__firebase = { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion };
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    
-    function showNotification(message, type = 'success') {
-        const notif = document.createElement('div');
-        notif.className = `notification ${type}`;
-        notif.textContent = message;
-        document.body.appendChild(notif);
-        setTimeout(() => notif.remove(), 3000);
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0c0f;
+      color: #eef2ff;
+      line-height: 1.5;
     }
-    
-    function setButtonLoading(button, isLoading) {
-        if (!button) return;
-        if (isLoading) {
-            button.classList.add('btn-loading');
-            button.disabled = true;
-        } else {
-            button.classList.remove('btn-loading');
-            button.disabled = false;
-        }
+
+    /* Container principal */
+    .app-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #0f1115;
+      min-height: 100vh;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
     }
-    
-    function sanitizeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+
+    /* Cards e UI moderna */
+    .card {
+      background: #1a1e26;
+      border-radius: 28px;
+      padding: 1.5rem;
+      margin: 1rem;
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(255, 94, 0, 0.2);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
     }
-    
-    function escapeHtml(text) { return sanitizeHtml(text); }
-    
-    function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
-    
-    function validateWeight(weight) {
-        const w = parseFloat(weight);
-        return !isNaN(w) && w > 20 && w < 500;
+
+    .btn {
+      background: linear-gradient(135deg, #ff5e00, #ff8c00);
+      border: none;
+      padding: 0.9rem 1.8rem;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+      text-align: center;
     }
-    
-    function validateHeight(height) {
-        const h = parseFloat(height);
-        return !isNaN(h) && h > 50 && h < 300;
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #ff5e00;
+      color: #ff8c00;
     }
-    
-    function safeNumber(value, defaultValue = 0) {
-        const num = parseFloat(value);
-        return isNaN(num) ? defaultValue : num;
+
+    .btn-small {
+      padding: 0.5rem 1.2rem;
+      font-size: 0.85rem;
+      width: auto;
+      background: linear-gradient(135deg, #ff5e00, #ff8c00);
     }
-    
-    // 🔴 #3: Exibição segura de peso com verificação explícita
-    function formatWeight(weight) {
-        if (weight === undefined || weight === null || weight === '') return '--';
-        const num = parseFloat(weight);
-        return isNaN(num) ? '--' : num.toFixed(1);
+
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
-    
-    function validateUsername(username) {
-        if (!username || typeof username !== 'string') return false;
-        const clean = username.toLowerCase().trim().replace(/\s+/g, '_');
-        return /^[a-z0-9_]{3,20}$/.test(clean);
+
+    .avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ff8c00;
     }
-    
-    function normalizeUsername(username) {
-        if (!username) return '';
-        let normalized = username.toLowerCase().trim().replace(/\s+/g, '_');
-        normalized = normalized.replace(/[^a-z0-9_]/g, '');
-        if (normalized.length < 3) normalized = `${normalized}_user`;
-        if (normalized.length > 20) normalized = normalized.substring(0, 20);
-        return normalized;
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff, #ff8c00);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
     }
-    
-    function isQuizComplete(quiz) {
-        if (!quiz) return false;
-        const required = ['objetivo', 'nivel', 'frequencia', 'local', 'idade', 'sexo', 'tempoTreino', 'focoMuscular', 'altura', 'peso'];
-        return required.every(field => quiz[field] !== undefined && quiz[field] !== null);
+
+    .badge {
+      background: #ff5e00;
+      padding: 0.25rem 0.8rem;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
-    
-    function getFirebaseErrorMessage(error) {
-        const messages = {
-            'auth/email-already-in-use': 'Este email já está cadastrado.',
-            'auth/invalid-email': 'Email inválido.',
-            'auth/weak-password': 'Senha muito fraca. Use pelo menos 6 caracteres.',
-            'auth/user-not-found': 'Usuário não encontrado.',
-            'auth/wrong-password': 'Senha incorreta.',
-            'auth/network-request-failed': 'Erro de rede. Verifique sua conexão.',
-            'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
-            'auth/popup-closed-by-user': 'Janela de login fechada. Tente novamente.'
-        };
-        return messages[error.code] || error.message || 'Ocorreu um erro. Tente novamente.';
+
+    .workout-item {
+      background: #0f1119;
+      border-radius: 20px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      border-left: 4px solid #ff5e00;
     }
-    
-    function requireAuth(actionName) {
-        if (!currentUser?.uid) {
-            console.warn(`Ação "${actionName}" bloqueada: usuário não autenticado`);
-            showNotification('Faça login para continuar', 'error');
-            return false;
-        }
-        return true;
+
+    .grid-days {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+      gap: 0.6rem;
+      margin-top: 1rem;
     }
-    
-    // 🔴 #4: Função para invalidar cache
-    function invalidateCache() {
-        try {
-            localStorage.removeItem(CACHE_KEY);
-        } catch (e) { console.warn('Cache invalidation failed:', e); }
+
+    .day-card {
+      background: #232833;
+      text-align: center;
+      padding: 0.6rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
     }
-    
-    function saveToCache(data) {
-        if (!data || !currentUser?.uid) return;
-        try {
-            const cacheData = {
-                data: data,
-                timestamp: Date.now(),
-                userId: currentUser.uid
-            };
-            localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-        } catch (e) { console.warn('Cache save failed:', e); }
+
+    .day-active {
+      background: #ff5e00;
+      box-shadow: 0 0 12px #ff8c00;
     }
-    
-    function getFromCache() {
-        try {
-            const cached = localStorage.getItem(CACHE_KEY);
-            if (!cached) return null;
-            const cacheData = JSON.parse(cached);
-            if (!currentUser || cacheData.userId !== currentUser.uid) return null;
-            if (Date.now() - cacheData.timestamp > 5 * 60 * 1000) return null;
-            return cacheData.data;
-        } catch (e) { return null; }
+
+    input, select {
+      background: #0f1119;
+      border: 1px solid #2a2f3f;
+      padding: 0.8rem;
+      border-radius: 20px;
+      color: white;
+      width: 100%;
+      margin-top: 0.3rem;
     }
-    
-    // ========== SISTEMA DE USERNAME ==========
-    function generateAlternativeUsername(baseUsername) {
-        const cleanBase = normalizeUsername(baseUsername).substring(0, 15);
-        const randomNum = Math.floor(Math.random() * 9000 + 1000);
-        return `${cleanBase}_${randomNum}`;
+
+    .error-msg {
+      color: #ff5e7c;
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
     }
-    
-    async function updateUsernameWithTransaction(desiredUsername, uid, oldUsername = null) {
-        if (!uid) throw new Error('UID não fornecido');
-        
-        let finalUsername = normalizeUsername(desiredUsername);
-        if (!finalUsername || finalUsername.length < 3) {
-            finalUsername = `user_${Math.floor(Math.random() * 10000)}`;
-        }
-        
-        let attempts = 0;
-        const maxAttempts = 5;
-        
-        while (attempts < maxAttempts) {
-            try {
-                await runTransaction(db, async (transaction) => {
-                    const usernameRef = doc(db, "usernames", finalUsername);
-                    const usernameDoc = await transaction.get(usernameRef);
-                    
-                    if (usernameDoc.exists()) {
-                        throw new Error('USERNAME_EXISTS');
-                    }
-                    
-                    if (oldUsername && oldUsername !== finalUsername) {
-                        const oldUsernameRef = doc(db, "usernames", oldUsername);
-                        const oldDoc = await transaction.get(oldUsernameRef);
-                        if (oldDoc.exists() && oldDoc.data().uid === uid) {
-                            transaction.delete(oldUsernameRef);
-                        }
-                    }
-                    
-                    transaction.set(usernameRef, {
-                        uid: uid,
-                        username: finalUsername,
-                        createdAt: Timestamp.now(),
-                        updatedAt: Timestamp.now()
-                    });
-                    
-                    transaction.update(doc(db, "users", uid), { username: finalUsername });
-                });
-                
-                invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-                return finalUsername;
-            } catch (error) {
-                if (error.message === 'USERNAME_EXISTS') {
-                    finalUsername = generateAlternativeUsername(desiredUsername);
-                    attempts++;
-                } else {
-                    throw error;
-                }
-            }
-        }
-        
-        const fallbackUsername = `temp_${Date.now()}`;
-        await runTransaction(db, async (transaction) => {
-            const usernameRef = doc(db, "usernames", fallbackUsername);
-            transaction.set(usernameRef, { uid: uid, username: fallbackUsername, createdAt: Timestamp.now() });
-            transaction.update(doc(db, "users", uid), { username: fallbackUsername });
-        });
-        invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-        return fallbackUsername;
+
+    canvas {
+      max-height: 250px;
+      width: 100%;
     }
-    
-    async function initializeUserUsername(uid, email) {
-        if (!uid) return null;
-        
-        try {
-            const userRef = doc(db, "users", uid);
-            const userSnap = await getDoc(userRef);
-            
-            if (userSnap.exists() && userSnap.data()?.username) {
-                return userSnap.data().username;
-            }
-            
-            let baseUsername = email.split('@')[0];
-            baseUsername = normalizeUsername(baseUsername);
-            
-            const finalUsername = await updateUsernameWithTransaction(baseUsername, uid, null);
-            return finalUsername;
-        } catch (error) {
-            console.error('Erro ao inicializar username:', error);
-            const fallbackUsername = `temp_${Date.now()}`;
-            try {
-                await updateDoc(doc(db, "users", uid), { username: fallbackUsername });
-                invalidateCache();
-                return fallbackUsername;
-            } catch {
-                return `temp_${Date.now()}`;
-            }
-        }
+
+    .timer-box {
+      font-family: monospace;
+      font-size: 2rem;
+      font-weight: 800;
+      text-align: center;
+      background: #00000040;
+      border-radius: 40px;
+      padding: 0.5rem;
+      color: #ff8c00;
     }
-    
-    // ========== CHAT IA COM LIMITE DE MENSAGENS ==========
-    async function askAI(question, userContext) {
-        if (!question?.trim()) return "Por favor, digite uma pergunta! 💪";
-        
-        const lowerQuestion = question.toLowerCase();
-        const hasQuiz = isQuizComplete(userContext?.quiz);
-        
-        if (lowerQuestion.includes('comer') || lowerQuestion.includes('dieta')) {
-            if (hasQuiz) {
-                const weight = safeNumber(userContext?.currentWeight, 70);
-                const calories = Math.round(weight * (userContext.quiz.objetivo === 'emagrecimento' ? 30 : 35));
-                const protein = Math.round(weight * (userContext.quiz.objetivo === 'hipertrofia' ? 2.2 : 1.8));
-                return `🍽️ **Plano para ${userContext.quiz.objetivo}:**\n📊 ${calories} kcal | ${protein}g proteína\n🥑 Pré-treino: Banana + Café\n🍗 Pós-treino: Whey + Batata`;
-            }
-            return "🍽️ Complete o quiz para recomendações personalizadas!";
-        }
-        
-        if (lowerQuestion.includes('treino')) {
-            if (hasQuiz && userContext?.dailyWorkout) {
-                const w = userContext.dailyWorkout;
-                return `💪 **Treino de hoje:**\n🏋️ ${w.exercises.join(', ')}\n📊 ${w.sets}x${w.reps}\n✨ Descanse 60-90s`;
-            }
-            return "💪 Complete o quiz para receber treinos personalizados!";
-        }
-        
-        return hasQuiz ? 
-            `🤖 Perfil: ${userContext.quiz.objetivo}, nível ${userContext.quiz.nivel}\n🎯 Mantenha consistência!` :
-            "🤖 Complete o quiz para recomendações personalizadas!";
+
+    .logo-boss {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
     }
-    
-    // 🔴 #1: Função para adicionar mensagem ao chat com limite
-    function addChatMessage(chat, messageHtml, isUser = false) {
-        if (!chat) return;
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
-        messageDiv.innerHTML = messageHtml;
-        chat.appendChild(messageDiv);
-        
-        // 🔴 #1: Limitar número de mensagens
-        while (chat.children.length > MAX_CHAT_MESSAGES) {
-            chat.removeChild(chat.firstChild);
-        }
-        
-        chat.scrollTop = chat.scrollHeight;
+    .logo-boss span {
+      color: #ff5e00;
     }
-    
-    // ========== TREINO ==========
-    function generateIntelligentWorkout(quiz, adaptationFactor = 1.0) {
-        if (!quiz) return null;
-        const workouts = {
-            'push': ['Supino Reto', 'Desenvolvimento', 'Tríceps Corda', 'Paralelas'],
-            'pull': ['Puxada Frontal', 'Remada Curvada', 'Rosca Direta', 'Encolhimento'],
-            'legs': ['Agachamento Livre', 'Leg Press', 'Cadeira Extensora', 'Mesa Flexora'],
-            'fullbody_casa': ['Flexões', 'Agachamento', 'Prancha', 'Afundo', 'Abdominal']
-        };
-        const day = new Date().getDay();
-        const split = day % 3;
-        let selected = quiz.local === 'casa' ? workouts.fullbody_casa : split === 0 ? workouts.push : split === 1 ? workouts.pull : workouts.legs;
-        let sets = quiz.nivel === 'iniciante' ? 3 : (quiz.nivel === 'intermediario' ? 4 : 5);
-        let reps = quiz.objetivo === 'hipertrofia' ? '8-12' : (quiz.objetivo === 'emagrecimento' ? '15-20' : '12-15');
-        sets = Math.max(2, Math.min(6, Math.floor(sets * adaptationFactor)));
-        return { exercises: selected, sets, reps, date: new Date().toISOString(), completed: false };
+
+    @media (max-width: 480px) {
+      .card { margin: 0.8rem; padding: 1.2rem; }
+      h2 { font-size: 1.3rem; }
     }
-    
-    function isSameDay(d1, d2) { return new Date(d1).toDateString() === new Date(d2).toDateString(); }
-    
-    async function getDailyWorkout(uid) {
-        if (!uid) return null;
-        try {
-            const userRef = doc(db, "users", uid);
-            const userSnap = await getDoc(userRef);
-            if (!userSnap.exists() || !isQuizComplete(userSnap.data()?.quiz)) return null;
-            const user = userSnap.data();
-            const today = new Date();
-            if (user.dailyWorkout?.date && isSameDay(user.dailyWorkout.date, today)) return user.dailyWorkout;
-            const newWorkout = generateIntelligentWorkout(user.quiz, user.adaptationFactor || 1.0);
-            if (newWorkout) await updateDoc(userRef, { dailyWorkout: newWorkout });
-            return newWorkout;
-        } catch (error) { console.error('Erro:', error); return null; }
-    }
-    
-    async function completeWorkout() {
-        if (!requireAuth('completeWorkout') || isProcessing || !isQuizComplete(userData?.quiz)) return;
-        isProcessing = true;
-        const btn = document.getElementById('completeWorkoutBtn');
-        setButtonLoading(btn, true);
-        try {
-            const userRef = doc(db, "users", currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            if (!userSnap.exists()) throw new Error('Dados não encontrados');
-            const user = userSnap.data();
-            const newStreak = (user.streak || 0) + 1;
-            const newTotal = (user.totalWorkouts || 0) + 1;
-            await updateDoc(userRef, {
-                streak: newStreak, totalWorkouts: newTotal, xp: increment(25),
-                lastWorkoutDate: new Date().toISOString(),
-                workoutHistory: arrayUnion({ date: new Date().toISOString(), workout: user.dailyWorkout })
-            });
-            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-            showNotification('✅ Treino concluído! +25 XP', 'success');
-            await loadUserData();
-            await displayWorkoutOfDay();
-        } catch (error) { 
-            showNotification('Erro ao salvar treino', 'error');
-            console.error(error);
-        } finally { 
-            isProcessing = false; 
-            setButtonLoading(btn, false); 
-        }
-    }
-    
-    // ========== CARREGAMENTO DE DADOS COM CACHE ==========
-    async function loadUserData() {
-        if (!currentUser?.uid) return;
-        
-        const cached = getFromCache();
-        if (cached) {
-            userData = cached;
-            updateUI();
-        }
-        
-        try {
-            const userRef = doc(db, "users", currentUser.uid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-                userData = userSnap.data();
-                saveToCache(userData);
-                updateUI();
-            } else {
-                console.warn('Documento do usuário não encontrado');
-                showNotification('Erro ao carregar dados do usuário', 'error');
-            }
-        } catch (error) { 
-            console.error('Erro ao carregar dados:', error);
-            showNotification('Erro ao carregar dados', 'error');
-        }
-    }
-    
-    function updateUI() {
-        if (!userData) return;
-        
-        // 🔴 #6: Verificar elementos antes de usar
-        const usernameDisplay = document.getElementById('profileUsernameDisplay');
-        if (usernameDisplay) usernameDisplay.innerHTML = `@${userData.username || 'user'} ✏️`;
-        
-        const imcDisplay = document.getElementById('imcValue');
-        if (imcDisplay) imcDisplay.innerHTML = `IMC: ${userData.imc || '--'}`;
-        
-        const weightValue = document.getElementById('weightValue');
-        if (weightValue) {
-            // 🔴 #3: Verificação explícita de peso
-            const weight = userData?.currentWeight;
-            if (weight !== undefined && weight !== null && weight !== '') {
-                weightValue.innerHTML = `Peso: ${formatWeight(weight)} kg`;
-            } else {
-                weightValue.innerHTML = `Peso: -- kg`;
-            }
-        }
-        
-        const streakCount = document.getElementById('streakCount');
-        if (streakCount) streakCount.innerHTML = `${userData.streak || 0} dias`;
-        
-        const totalWorkouts = document.getElementById('totalWorkouts');
-        if (totalWorkouts) totalWorkouts.innerHTML = userData.totalWorkouts || 0;
-        
-        const xpTotal = document.getElementById('xpTotal');
-        if (xpTotal) xpTotal.innerHTML = userData.xp || 0;
-        
-        const level = Math.floor((userData.xp || 0) / 100) + 1;
-        const levelDisplay = document.getElementById('levelDisplay');
-        if (levelDisplay) levelDisplay.innerHTML = `Nível ${level}`;
-        
-        const xpProgress = document.getElementById('xpProgress');
-        if (xpProgress) xpProgress.style.width = `${(userData.xp || 0) % 100}%`;
-        
-        const badgesContainer = document.getElementById('badgesContainer');
-        if (badgesContainer) {
-            badgesContainer.innerHTML = '';
-            const badgeList = [
-                { id: 'first_workout', name: '🏅 Primeiro Passo' },
-                { id: '7day_streak', name: '🔥 Semana de Fogo' },
-                { id: '30day_streak', name: '💪 Lenda' },
-                { id: '10_workouts', name: '📈 Constância' }
-            ];
-            badgeList.forEach(b => {
-                const unlocked = userData.achievements?.includes(b.id);
-                badgesContainer.innerHTML += `<div class="badge ${unlocked ? '' : 'locked'}">${b.name} ${unlocked ? '✓' : '🔒'}</div>`;
-            });
-        }
-        
-        if (userData.weightHistory?.length) drawCharts(userData.weightHistory);
-        
-        const weightNum = safeNumber(userData.currentWeight, 70);
-        const calories = Math.round(weightNum * (userData.quiz?.objetivo === 'emagrecimento' ? 30 : 35));
-        const protein = Math.round(weightNum * (userData.quiz?.objetivo === 'hipertrofia' ? 2.2 : 1.8));
-        const nutritionPlan = document.getElementById('nutritionPlan');
-        if (nutritionPlan) {
-            nutritionPlan.innerHTML = `🔥 ${calories} kcal | 💪 ${protein}g proteína<br>🥑 Banana + Café | 🍗 Whey + Batata`;
-        }
-    }
-    
-    function drawCharts(weightHistory) {
-        const canvas = document.getElementById('weightChartCanvas');
-        if (!canvas) return;
-        const valid = (weightHistory || []).filter(w => w && !isNaN(parseFloat(w.valor)));
-        if (weightChart) weightChart.destroy();
-        if (valid.length === 0) return;
-        weightChart = new Chart(canvas.getContext('2d'), {
-            type: 'line',
-            data: { 
-                labels: valid.map((_, i) => i + 1), 
-                datasets: [{ label: 'Peso (kg)', data: valid.map(w => parseFloat(w.valor)), borderColor: '#ff5e00', tension: 0.3 }] 
-            }
-        });
-    }
-    
-    async function displayWorkoutOfDay() {
-        if (!currentUser?.uid || isLoadingWorkout) return;
-        isLoadingWorkout = true;
-        try {
-            if (!isQuizComplete(userData?.quiz)) {
-                const container = document.getElementById('workoutOfDay');
-                if (container) container.innerHTML = '<p>⚠️ Complete o quiz para gerar seu treino!</p>';
-                return;
-            }
-            const workout = await getDailyWorkout(currentUser.uid);
-            const container = document.getElementById('workoutOfDay');
-            if (!workout) { 
-                if (container) container.innerHTML = '<p>Erro ao carregar treino.</p>'; 
-                return; 
-            }
-            if (container) {
-                container.innerHTML = `
-                    <p>📌 ${workout.sets}x${workout.reps}</p>
-                    <ul>${workout.exercises.map(ex => `<li>${escapeHtml(ex)}</li>`).join('')}</ul>
-                    <button id="completeWorkoutBtn" class="btn-primary">✅ Concluir treino</button>
-                `;
-                const completeBtn = document.getElementById('completeWorkoutBtn');
-                if (completeBtn) completeBtn.addEventListener('click', completeWorkout);
-            }
-        } catch (error) {
-            console.error('Erro ao exibir treino:', error);
-        } finally { 
-            isLoadingWorkout = false; 
-        }
-    }
-    
-    // ========== QUIZ ==========
-    const quizQuestions = [
-        { id: 'objetivo', type: 'select', label: 'Objetivo?', options: ['emagrecimento', 'hipertrofia', 'condicionamento'] },
-        { id: 'nivel', type: 'select', label: 'Nível?', options: ['iniciante', 'intermediario', 'avancado'] },
-        { id: 'frequencia', type: 'number', label: 'Dias/semana?', min: 1, max: 7 },
-        { id: 'local', type: 'select', label: 'Local?', options: ['casa', 'academia'] },
-        { id: 'idade', type: 'number', label: 'Idade?', min: 15, max: 100 },
-        { id: 'sexo', type: 'select', label: 'Sexo?', options: ['masculino', 'feminino'] },
-        { id: 'tempoTreino', type: 'number', label: 'Minutos/treino?', min: 20, max: 120 },
-        { id: 'focoMuscular', type: 'select', label: 'Foco?', options: ['peito', 'pernas', 'costas', 'fullbody'] },
-        { id: 'altura', type: 'number', label: 'Altura (cm)?', min: 100, max: 250 },
-        { id: 'peso', type: 'number', label: 'Peso (kg)?', min: 30, max: 250 }
-    ];
-    
-    function renderQuizStep() {
-        const container = document.getElementById('quizContainer');
-        const q = quizQuestions[currentQuizStep];
-        if (!q) { finishQuiz(); return; }
-        if (container) {
-            container.innerHTML = `<div><h3>${escapeHtml(q.label)}</h3>` +
-                (q.type === 'select' ? `<select id="quizAnswer">${q.options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('')}</select>` :
-                `<input type="number" id="quizAnswer" min="${q.min}" max="${q.max}">`) + `</div>`;
-        }
-    }
-    
-    async function finishQuiz() {
-        if (!requireAuth('finishQuiz')) return;
-        setButtonLoading(document.getElementById('nextQuizBtn'), true);
-        try {
-            const processed = {};
-            for (const [key, value] of Object.entries(quizAnswers)) {
-                const q = quizQuestions.find(q => q.id === key);
-                if (q?.type === 'number') {
-                    const num = parseFloat(value);
-                    if (isNaN(num)) throw new Error(`Valor inválido para ${q.label}`);
-                    processed[key] = num;
-                } else {
-                    processed[key] = value;
-                }
-            }
-            if (!validateHeight(processed.altura) || !validateWeight(processed.peso)) {
-                throw new Error('Altura ou peso inválidos');
-            }
-            
-            const imc = (processed.peso / ((processed.altura / 100) ** 2)).toFixed(1);
-            await updateDoc(doc(db, "users", currentUser.uid), {
-                quiz: processed, imc, currentWeight: processed.peso,
-                weightHistory: [{ data: new Date().toISOString(), valor: processed.peso }],
-                adaptationFactor: 1.0, xp: increment(100)
-            });
-            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-            const quizModal = document.getElementById('quizModal');
-            if (quizModal) quizModal.classList.add('hide');
-            showNotification('Quiz completo! +100 XP', 'success');
-            await loadUserData();
-            await displayWorkoutOfDay();
-            const mainApp = document.getElementById('mainApp');
-            if (mainApp) mainApp.classList.remove('hide');
-        } catch (error) { 
-            showNotification(error.message, 'error');
-        } finally { 
-            setButtonLoading(document.getElementById('nextQuizBtn'), false); 
-        }
-    }
-    
-    function startTimer(seconds = 90) {
-        if (activeTimer) {
-            clearInterval(activeTimer);
-            activeTimer = null;
-        }
-        let sec = seconds;
-        const timerDisplay = document.getElementById('timerDisplay');
-        const startBtn = document.getElementById('startTimerBtn');
-        if (startBtn) startBtn.disabled = true;
-        activeTimer = setInterval(() => {
-            if (sec <= 0) {
-                if (activeTimer) {
-                    clearInterval(activeTimer);
-                    activeTimer = null;
-                }
-                if (timerDisplay) {
-                    timerDisplay.innerHTML = "⏰ Descanso concluído!";
-                    timerDisplay.style.color = "#00ff88";
-                }
-                if (startBtn) startBtn.disabled = false;
-            } else { 
-                if (timerDisplay) timerDisplay.innerHTML = `${sec}s`; 
-                sec--; 
-            }
-        }, 1000);
-    }
-    
-    // ========== EVENT LISTENERS ==========
-    document.getElementById('nextQuizBtn')?.addEventListener('click', async () => {
-        if (isProcessing) return;
-        
-        const answer = document.getElementById('quizAnswer');
-        if (!answer) return;
-        
-        // 🔴 #2: Validar input numérico do quiz
-        if (answer.type === 'number') {
-            const value = parseFloat(answer.value);
-            const min = parseFloat(answer.min);
-            const max = parseFloat(answer.max);
-            
-            if (isNaN(value)) {
-                showNotification('Digite um valor válido', 'warning');
-                return;
-            }
-            if (!isNaN(min) && value < min) {
-                showNotification(`Valor mínimo é ${min}`, 'warning');
-                return;
-            }
-            if (!isNaN(max) && value > max) {
-                showNotification(`Valor máximo é ${max}`, 'warning');
-                return;
-            }
-        }
-        
-        const answerValue = answer.value;
-        if (!answerValue || answerValue.trim() === '') {
-            showNotification('Responda antes de continuar', 'warning');
-            return;
-        }
-        
-        isProcessing = true;
-        quizAnswers[quizQuestions[currentQuizStep].id] = answerValue;
-        currentQuizStep++;
-        if (currentQuizStep < quizQuestions.length) {
-            renderQuizStep();
-        } else {
-            await finishQuiz();
-        }
-        isProcessing = false;
-    });
-    
-    document.getElementById('askCoachBtn')?.addEventListener('click', async () => {
-        const question = document.getElementById('coachQuestion')?.value;
-        if (!question?.trim()) { showNotification('Digite uma pergunta', 'warning'); return; }
-        if (isProcessing) return;
-        isProcessing = true;
-        setButtonLoading(document.getElementById('askCoachBtn'), true);
-        try {
-            const chat = document.getElementById('chatContainer');
-            if (!chat) {
-                console.error('Chat container não encontrado');
-                return;
-            }
-            
-            // 🔴 #1: Usar função controlada para adicionar mensagem
-            addChatMessage(chat, `<div class="message-content">${escapeHtml(question)}</div>`, true);
-            
-            const questionInput = document.getElementById('coachQuestion');
-            if (questionInput) questionInput.value = '';
-            
-            // Adicionar loading
-            const loadingId = Date.now();
-            addChatMessage(chat, `<div class="message-content"><div class="loading-spinner" style="width:20px;height:20px;"></div></div>`, false);
-            
-            const response = await askAI(question, userData);
-            
-            // Remover loading e adicionar resposta
-            if (chat.lastChild) chat.removeChild(chat.lastChild);
-            addChatMessage(chat, `<div class="message-content">${escapeHtml(response).replace(/\n/g, '<br>')}</div>`, false);
-            
-        } catch (error) {
-            console.error('Erro no chat:', error);
-            showNotification('Erro ao processar pergunta', 'error');
-        } finally { 
-            setButtonLoading(document.getElementById('askCoachBtn'), false); 
-            isProcessing = false; 
-        }
-    });
-    
-    document.getElementById('feedbackEasy')?.addEventListener('click', async () => {
-        if (!requireAuth('feedback') || !isQuizComplete(userData?.quiz) || isProcessing) return;
-        isProcessing = true;
-        try {
-            const newFactor = Math.min(1.7, (userData?.adaptationFactor || 1.0) + 0.1);
-            await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
-            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-            showNotification('Treino mais intenso!', 'success');
-            await displayWorkoutOfDay();
-        } catch (error) { 
-            showNotification('Erro ao ajustar treino', 'error');
-            console.error(error);
-        } finally { 
-            isProcessing = false; 
-        }
-    });
-    
-    document.getElementById('feedbackHard')?.addEventListener('click', async () => {
-        if (!requireAuth('feedback') || !isQuizComplete(userData?.quiz) || isProcessing) return;
-        isProcessing = true;
-        try {
-            const newFactor = Math.max(0.6, (userData?.adaptationFactor || 1.0) - 0.1);
-            await updateDoc(doc(db, "users", currentUser.uid), { adaptationFactor: newFactor });
-            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-            showNotification('Treino mais leve', 'success');
-            await displayWorkoutOfDay();
-        } catch (error) { 
-            showNotification('Erro ao ajustar treino', 'error');
-            console.error(error);
-        } finally { 
-            isProcessing = false; 
-        }
-    });
-    
-    document.getElementById('regenerateWorkoutBtn')?.addEventListener('click', async () => {
-        if (!requireAuth('regenerate') || !isQuizComplete(userData?.quiz) || isProcessing) return;
-        isProcessing = true;
-        setButtonLoading(document.getElementById('regenerateWorkoutBtn'), true);
-        try {
-            const newWorkout = generateIntelligentWorkout(userData?.quiz, userData?.adaptationFactor || 1.0);
-            await updateDoc(doc(db, "users", currentUser.uid), { dailyWorkout: newWorkout });
-            invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-            await displayWorkoutOfDay();
-            showNotification('Novo treino gerado!', 'success');
-        } catch (error) { 
-            showNotification('Erro ao gerar novo treino', 'error');
-            console.error(error);
-        } finally { 
-            setButtonLoading(document.getElementById('regenerateWorkoutBtn'), false); 
-            isProcessing = false; 
-        }
-    });
-    
-    document.getElementById('updateWeightBtn')?.addEventListener('click', async () => {
-        if (!requireAuth('updateWeight')) return;
-        const newWeight = prompt('Novo peso (kg):');
-        if (newWeight && validateWeight(newWeight)) {
-            showLoading(true, 'Atualizando...');
-            try {
-                const altura = userData?.quiz?.altura;
-                if (!altura) { showNotification('Complete o quiz primeiro', 'warning'); return; }
-                const weightNum = parseFloat(newWeight);
-                const newImc = (weightNum / ((altura / 100) ** 2)).toFixed(1);
-                await updateDoc(doc(db, "users", currentUser.uid), {
-                    currentWeight: weightNum, imc: newImc,
-                    weightHistory: arrayUnion({ data: new Date().toISOString(), valor: weightNum })
-                });
-                invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-                await loadUserData();
-                showNotification('Peso atualizado!', 'success');
-            } catch (error) { 
-                showNotification('Erro ao atualizar peso', 'error');
-                console.error(error);
-            } finally { 
-                showLoading(false); 
-            }
-        } else if (newWeight) { 
-            showNotification('Peso inválido (20-500kg)', 'error'); 
-        }
-    });
-    
-    document.getElementById('profileUsernameDisplay')?.addEventListener('click', async () => {
-        if (!requireAuth('editUsername')) return;
-        const newUsername = prompt('Novo username (3-20 caracteres, letras/números/_)', userData?.username);
-        if (newUsername && newUsername !== userData?.username) {
-            if (!validateUsername(newUsername)) {
-                showNotification('Username inválido. Use 3-20 caracteres (letras, números, _)', 'error');
-                return;
-            }
-            showLoading(true, 'Atualizando username...');
-            try {
-                const oldUsername = userData?.username;
-                const result = await updateUsernameWithTransaction(newUsername, currentUser.uid, oldUsername);
-                if (result) {
-                    await loadUserData();
-                    showNotification(`Username alterado para @${result}`, 'success');
-                }
-            } catch (error) {
-                showNotification('Erro ao alterar username', 'error');
-                console.error(error);
-            } finally {
-                showLoading(false);
-            }
-        }
-    });
-    
-    document.getElementById('editProfileBtn')?.addEventListener('click', () => {
-        const editUsername = document.getElementById('editUsername');
-        const editWeight = document.getElementById('editWeight');
-        const editHeight = document.getElementById('editHeight');
-        const editGoal = document.getElementById('editGoal');
-        if (editUsername) editUsername.value = userData?.username || '';
-        if (editWeight) editWeight.value = userData?.currentWeight || '';
-        if (editHeight) editHeight.value = userData?.quiz?.altura || '';
-        if (editGoal) editGoal.value = userData?.quiz?.objetivo || 'emagrecimento';
-        const modal = document.getElementById('editProfileModal');
-        if (modal) modal.classList.remove('hide');
-    });
-    
-    document.getElementById('saveProfileBtn')?.addEventListener('click', async () => {
-        const newUsername = document.getElementById('editUsername')?.value.trim() || '';
-        const newWeight = parseFloat(document.getElementById('editWeight')?.value || '0');
-        const newHeight = parseFloat(document.getElementById('editHeight')?.value || '0');
-        const newGoal = document.getElementById('editGoal')?.value || 'emagrecimento';
-        
-        showLoading(true, 'Salvando alterações...');
-        
-        try {
-            if (newUsername && newUsername !== userData?.username && validateUsername(newUsername)) {
-                const oldUsername = userData?.username;
-                await updateUsernameWithTransaction(newUsername, currentUser.uid, oldUsername);
-            }
-            
-            const updates = {};
-            if (validateWeight(newWeight)) updates.currentWeight = newWeight;
-            if (validateHeight(newHeight) && userData?.quiz) {
-                updates['quiz.altura'] = newHeight;
-                const weight = validateWeight(newWeight) ? newWeight : (userData?.currentWeight || 70);
-                updates.imc = (weight / ((newHeight / 100) ** 2)).toFixed(1);
-            }
-            if (newGoal && userData?.quiz) updates['quiz.objetivo'] = newGoal;
-            
-            if (Object.keys(updates).length) {
-                await updateDoc(doc(db, "users", currentUser.uid), updates);
-                invalidateCache(); // 🔴 #4: Invalidar cache após atualização
-                await loadUserData();
-                showNotification('Perfil atualizado!', 'success');
-            }
-        } catch (error) {
-            showNotification('Erro ao salvar alterações', 'error');
-            console.error(error);
-        } finally {
-            showLoading(false);
-            const modal = document.getElementById('editProfileModal');
-            if (modal) modal.classList.add('hide');
-        }
-    });
-    
-    document.getElementById('closeProfileModal')?.addEventListener('click', () => {
-        const modal = document.getElementById('editProfileModal');
-        if (modal) modal.classList.add('hide');
-    });
-    
-    document.getElementById('startTimerBtn')?.addEventListener('click', () => startTimer(90));
-    
-    // ========== AUTENTICAÇÃO ==========
-    document.getElementById('doEmailLogin')?.addEventListener('click', async () => {
-        if (isProcessing) return;
-        isProcessing = true;
-        setButtonLoading(document.getElementById('doEmailLogin'), true);
-        try {
-            const email = document.getElementById('loginEmail')?.value || '';
-            const pass = document.getElementById('loginPassword')?.value || '';
-            if (!email || !validateEmail(email)) { showNotification('Email inválido', 'error'); return; }
-            if (!pass || pass.length < 6) { showNotification('Senha deve ter 6+ caracteres', 'error'); return; }
-            showLoading(true, 'Entrando...');
-            await signInWithEmailAndPassword(auth, email, pass);
-        } catch (e) { 
-            showNotification(getFirebaseErrorMessage(e), 'error');
-        } finally { 
-            showLoading(false); 
-            setButtonLoading(document.getElementById('doEmailLogin'), false); 
-            isProcessing = false; 
-        }
-    });
-    
+  </style>
+</head>
+<body>
+<div id="root" class="app-container"></div>
+
+<script type="module">
+  // ----------------------------------------------
+  // BOSSFIT - Sistema de Academia Inteligente
+  // ----------------------------------------------
+  const { auth, db, provider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, arrayUnion } = window.__firebase;
+  
+  let currentUser = null;
+  let userData = null;
+  let weightChart = null;
+  
+  const root = document.getElementById('root');
+  
+  function renderLogin() {
+    root.innerHTML = `
+      <div style="display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 2rem;">
+        <div class="card" style="text-align: center;">
+          <div class="logo-boss">BOSSFIT<span>🔥</span></div>
+          <p style="margin: 1rem 0; color: #a0afc0; font-weight: 500;">Treinos que evoluem com você. Resultados de elite.</p>
+          <button id="googleLoginBtn" class="btn" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" style="filter: invert(1);"> Entrar com Google
+          </button>
+        </div>
+      </div>
+    `;
     document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
-        if (isProcessing) return;
-        isProcessing = true;
-        setButtonLoading(document.getElementById('googleLoginBtn'), true);
-        try {
-            showLoading(true, 'Entrando com Google...');
-            await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch (e) { 
-            showNotification(getFirebaseErrorMessage(e), 'error');
-        } finally { 
-            showLoading(false); 
-            setButtonLoading(document.getElementById('googleLoginBtn'), false); 
-            isProcessing = false; 
-        }
+      try {
+        await signInWithPopup(auth, provider);
+      } catch(e) { console.error(e); alert("Erro login: "+e.message); }
     });
+  }
+  
+  function renderQuiz() {
+    root.innerHTML = `
+      <div style="padding: 1rem;">
+        <div class="card">
+          <div class="logo-boss" style="font-size:1.5rem">BOSSFIT<span>⚡</span></div>
+          <h2>📋 Seu Quiz de Ativação</h2>
+          <p>Vamos construir seu treino sob medida</p>
+          <div id="quizForm">
+            <label>🎯 Objetivo</label>
+            <select id="objetivo"><option value="emagrecimento">🔥 Emagrecimento</option><option value="hipertrofia">💪 Hipertrofia</option><option value="condicionamento">⚡ Condicionamento</option></select>
+            <label>📊 Nível</label>
+            <select id="nivel"><option value="iniciante">🌱 Iniciante</option><option value="intermediario">🚀 Intermediário</option><option value="avancado">🏆 Avançado</option></select>
+            <label>📅 Frequência semanal</label>
+            <select id="frequencia"><option value="2-3">2-3 dias</option><option value="4-5">4-5 dias</option><option value="6">6 dias</option></select>
+            <label>🏠 Local</label>
+            <select id="local"><option value="academia">🏋️ Academia</option><option value="casa">🏡 Casa</option></select>
+            <label>⚠️ Limitações físicas (opcional)</label>
+            <input type="text" id="limitacoes" placeholder="ex: joelho, ombro, coluna">
+            <label>📏 Altura (cm) 140-220</label>
+            <input type="number" id="altura" min="140" max="220" placeholder="ex: 175">
+            <label>⚖️ Peso (kg) 35-200</label>
+            <input type="number" id="peso" min="35" max="200" placeholder="ex: 75.5">
+            <div id="quizError" class="error-msg"></div>
+            <button id="submitQuizBtn" class="btn" style="margin-top: 1.5rem;">🚀 Gerar Treino BOSSFIT</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('submitQuizBtn')?.addEventListener('click', async () => {
+      const objetivo = document.getElementById('objetivo').value;
+      const nivel = document.getElementById('nivel').value;
+      const freqRaw = document.getElementById('frequencia').value;
+      const local = document.getElementById('local').value;
+      const limitacoes = document.getElementById('limitacoes').value || "nenhuma";
+      let altura = parseFloat(document.getElementById('altura').value);
+      let peso = parseFloat(document.getElementById('peso').value);
+      const errorDiv = document.getElementById('quizError');
+      if (isNaN(altura) || altura < 140 || altura > 220) { errorDiv.innerText = "Altura inválida (140-220cm)"; return; }
+      if (isNaN(peso) || peso < 35 || peso > 200) { errorDiv.innerText = "Peso inválido (35-200kg)"; return; }
+      const imc = peso / ((altura/100)**2);
+      if (imc < 12 || imc > 50) { errorDiv.innerText = "IMC fora da faixa realista, verifique peso/altura."; return; }
+      const frequencia = parseInt(freqRaw.split('-')[0]);
+      const treinoGerado = gerarTreinoPersonalizado(objetivo, nivel, frequencia, local);
+      const agenda = gerarAgendaSemanal(frequencia);
+      const agora = new Date().toISOString();
+      const newUserData = {
+        uid: currentUser.uid,
+        nome: currentUser.displayName,
+        email: currentUser.email,
+        foto: currentUser.photoURL || "",
+        altura, peso, objetivo, nivel, frequencia, local,
+        treino: treinoGerado,
+        agendaSemanal: agenda,
+        historicoPeso: [{ peso, data: agora }],
+        totalTreinos: 0,
+        ultimoTreino: null,
+        limitacoes,
+        streak: 0,
+        ultimoCheckin: null,
+        adaptacaoFator: 1.0
+      };
+      await setDoc(doc(db, "usuarios", currentUser.uid), newUserData);
+      loadDashboard();
+    });
+  }
+  
+  // Geração de treino BOSSFIT premium
+  function gerarTreinoPersonalizado(objetivo, nivel, freq, local) {
+    const baseExercicios = {
+      emagrecimento: { 
+        academia: ["Agachamento com Salto", "Leg Press 45°", "Supino Inclinado", "Remada Curvada", "Desenvolvimento com Halter", "Cardio HIIT 20min"], 
+        casa: ["Burpee Explosivo", "Agachamento", "Flexão de Braço", "Afundo", "Prancha Dinâmica", "Polichinelo"] 
+      },
+      hipertrofia: { 
+        academia: ["Supino Reto", "Rosca Direta", "Tríceps Corda", "Puxada Frontal", "Agachamento Livre", "Stiff", "Elevação Lateral"], 
+        casa: ["Flexão Diamante", "Tríceps Banco", "Rosca com Mochila", "Agachamento Búlgaro", "Elevação Pélvica", "Mergulho em Cadeira"] 
+      },
+      condicionamento: { 
+        academia: ["Burpee", "Corda Naval", "Corrida 5km", "Kettlebell Swing", "Box Jump", "Abdominal Remador", "Skipping"], 
+        casa: ["Burpee", "Mountain Climber", "Polichinelo", "Agachamento", "Prancha Dinâmica", "Jumping Jacks"] 
+      }
+    };
+    let lista = baseExercicios[objetivo]?.[local] || baseExercicios.emagrecimento.academia;
+    let series = nivel === "iniciante" ? 3 : (nivel === "intermediario" ? 4 : 5);
+    let repeticoes = objetivo === "hipertrofia" ? "8-12" : (objetivo === "emagrecimento" ? "15-20" : "12-15");
+    if (local === "casa" && objetivo === "hipertrofia") repeticoes = "12-15";
+    let treinoEstruturado = lista.map(ex => ({ nome: ex, series, repeticoes }));
+    return treinoEstruturado;
+  }
+  
+  function gerarAgendaSemanal(frequencia) {
+    const diasSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+    let agenda = {};
+    let diasTreino = frequencia === 2 ? [0,3] : frequencia === 3 ? [0,2,4] : frequencia === 4 ? [0,1,3,5] : [0,1,2,3,4];
+    if (frequencia === 6) diasTreino = [0,1,2,3,4,5];
+    for (let i=0; i<diasSemana.length; i++) {
+      agenda[diasSemana[i]] = diasTreino.includes(i) ? "💪 Treino BOSS" : "😴 Descanso Ativo";
+    }
+    return agenda;
+  }
+  
+  // IA Adaptativa BOSSFIT
+  async function adaptarTreinoPorFeedback(dificuldade) {
+    if (!userData) return;
+    let fator = userData.adaptacaoFator || 1.0;
+    if (dificuldade === "facil") fator = Math.min(1.7, fator + 0.12);
+    else if (dificuldade === "dificil") fator = Math.max(0.6, fator - 0.1);
+    else fator = fator;
+    let novoTreino = userData.treino.map(ex => {
+      let novasSeries = Math.floor(parseInt(ex.series) * fator);
+      if (novasSeries < 2) novasSeries = 2;
+      if (novasSeries > 6) novasSeries = 6;
+      return { ...ex, series: novasSeries };
+    });
+    await updateDoc(doc(db, "usuarios", currentUser.uid), { treino: novoTreino, adaptacaoFator: fator });
+    userData.treino = novoTreino;
+    userData.adaptacaoFator = fator;
+    loadDashboard();
+  }
+  
+  async function registrarTreinoConcluido(feedback = null) {
+    if (!currentUser || !userData) return;
+    const hoje = new Date().toDateString();
+    const ultimo = userData.ultimoTreino ? new Date(userData.ultimoTreino).toDateString() : null;
+    let novoStreak = userData.streak || 0;
+    if (ultimo === hoje) { alert("Você já registrou o treino de hoje! Bora descansar? 💪"); return; }
+    if (ultimo && (new Date() - new Date(userData.ultimoTreino)) <= 86400000*2) novoStreak += 1;
+    else novoStreak = 1;
+    const total = (userData.totalTreinos || 0) + 1;
+    const updates = {
+      totalTreinos: total,
+      ultimoTreino: new Date().toISOString(),
+      streak: novoStreak
+    };
+    await updateDoc(doc(db, "usuarios", currentUser.uid), updates);
+    userData.totalTreinos = total;
+    userData.streak = novoStreak;
+    userData.ultimoTreino = updates.ultimoTreino;
+    if (feedback) await adaptarTreinoPorFeedback(feedback);
+    loadDashboard();
+  }
+  
+  async function atualizarPeso(novoPeso) {
+    if (!currentUser || !userData) return;
+    const pesoNum = parseFloat(novoPeso);
+    if (isNaN(pesoNum) || pesoNum < 35 || pesoNum > 200) { alert("Peso inválido"); return; }
+    const historicoAtualizado = [...(userData.historicoPeso || []), { peso: pesoNum, data: new Date().toISOString() }];
+    await updateDoc(doc(db, "usuarios", currentUser.uid), { peso: pesoNum, historicoPeso: historicoAtualizado });
+    userData.peso = pesoNum;
+    userData.historicoPeso = historicoAtualizado;
+    loadDashboard();
+  }
+  
+  function calcularIMC(peso, alturaCm) {
+    const alturaM = alturaCm/100;
+    const imc = peso / (alturaM*alturaM);
+    let classificacao = "";
+    if (imc < 18.5) classificacao = "Abaixo do peso";
+    else if (imc < 25) classificacao = "Normal 🟢";
+    else if (imc < 30) classificacao = "Sobrepeso 🟡";
+    else classificacao = "Obesidade 🔴";
+    return { imc: imc.toFixed(1), classificacao };
+  }
+  
+  function renderDashboard() {
+    if (!userData) return;
+    const imcObj = calcularIMC(userData.peso, userData.altura);
+    const hojeSemana = new Date().toLocaleString('pt-br', { weekday: 'long' }).replace('-feira','').replace('ç','c').slice(0,3);
+    const nomeDiaMap = { "segunda":"Segunda","terça":"Terça","quarta":"Quarta","quinta":"Quinta","sexta":"Sexta","sábado":"Sábado","domingo":"Domingo"};
+    const diaHoje = nomeDiaMap[hojeSemana.toLowerCase()] || "Segunda";
+    const treinoHoje = userData.agendaSemanal?.[diaHoje] === "💪 Treino BOSS" ? userData.treino : null;
     
-    document.getElementById('doSignup')?.addEventListener('click', async () => {
-        if (isProcessing) return;
-        isProcessing = true;
-        setButtonLoading(document.getElementById('doSignup'), true);
-        try {
-            const email = document.getElementById('signupEmail')?.value || '';
-            const pass = document.getElementById('signupPassword')?.value || '';
-            if (!email || !validateEmail(email)) { showNotification('Email inválido', 'error'); return; }
-            if (!pass || pass.length < 6) { showNotification('Senha deve ter 6+ caracteres', 'error'); return; }
-            showLoading(true, 'Criando conta...');
-            const cred = await createUserWithEmailAndPassword(auth, email, pass);
-            await sendEmailVerification(cred.user);
-            showNotification('Conta criada! Verifique seu email.', 'success');
-        } catch (e) { 
-            showNotification(getFirebaseErrorMessage(e), 'error');
-        } finally { 
-            showLoading(false); 
-            setButtonLoading(document.getElementById('doSignup'), false); 
-            isProcessing = false; 
-        }
-    });
+    root.innerHTML = `
+      <div style="padding: 1rem 0.5rem;">
+        <div class="card flex-row">
+          <div><img class="avatar" src="${userData.foto || 'https://ui-avatars.com/api/?background=ff5e00&color=fff&name='+userData.nome}" alt="avatar"></div>
+          <div><h3 style="font-weight:800">${userData.nome}</h3><span class="badge">🔥 STREAK ${userData.streak || 0} dias</span></div>
+          <button id="logoutBtn" class="btn-small btn-outline" style="border-color:#ff5e00">Sair</button>
+        </div>
+        <div class="card">
+          <div class="flex-row"><span>📊 IMC ${imcObj.imc}</span><span>${imcObj.classificacao}</span><span>🏆 ${userData.totalTreinos || 0} treinos</span></div>
+          <div class="flex-row" style="margin-top: 0.5rem;"><span>⚖️ ${userData.peso} kg</span><button id="updateWeightBtn" class="btn-small" style="width: auto; background:#333; border:1px solid #ff5e00;">+ Registrar Peso</button></div>
+        </div>
+        <div class="card">
+          <h2>🏋️ TREINO BOSS - ${diaHoje}</h2>
+          ${treinoHoje ? treinoHoje.map(ex => `<div class="workout-item"><strong>${ex.nome}</strong> • ${ex.series} séries x ${ex.repeticoes} reps</div>`).join('') : '<p style="text-align:center;">😴 Dia de descanso estratégico. Mobilidade e caminhada leve.</p>'}
+          ${treinoHoje ? `<div style="margin: 1rem 0;"><button id="completeWorkoutBtn" class="btn">✅ Concluir Treino BOSS</button></div>` : ''}
+          <div id="feedbackArea" style="display: none; margin-top: 1rem;">
+            <p style="font-weight:600;">Como foi o treino de hoje?</p>
+            <div class="flex-row"><button id="feedbackFacil" class="btn-small" style="background:#00b4d8;">💚 Fácil</button><button id="feedbackMedio" class="btn-small" style="background:#ffaa00;">💛 Médio</button><button id="feedbackDificil" class="btn-small" style="background:#ff4d4d;">❤️‍🔥 Difícil</button></div>
+          </div>
+          <div id="timerSection" style="margin-top: 1rem; display: none;">
+            <div class="timer-box" id="timerDisplay">01:30</div>
+            <button id="resetTimerBtn" class="btn-small btn-outline">⏱️ Resetar 90s</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>📅 Agenda Semanal BOSS</h2>
+          <div class="grid-days">
+            ${Object.entries(userData.agendaSemanal).map(([dia, status]) => `<div class="day-card ${status.includes('Treino') && dia === diaHoje ? 'day-active' : ''}">${dia}<br>${status === '💪 Treino BOSS' ? '🏋️' : '🧘'}</div>`).join('')}
+          </div>
+        </div>
+        <div class="card">
+          <h2>📈 Evolução de Peso</h2>
+          <canvas id="weightChartCanvas" width="400" height="200"></canvas>
+        </div>
+        <div class="card">
+          <p><strong>🍽️ Dica BOSSFIT:</strong> ${userData.objetivo === 'emagrecimento' ? 'Déficit calórico moderado + alta proteína. Beba água!' : userData.objetivo === 'hipertrofia' ? 'Superávit limpo, 2.2g proteína/kg. Creatina recomendada.' : 'Carboidratos complexos antes do treino, recuperação com proteína.'}</p>
+          <p><strong>🔥 Calorias diárias estimadas:</strong> ${Math.round(28 * userData.peso)} kcal</p>
+          <p><strong>🤖 IA Adaptativa:</strong> Nível de carga ${Math.round((userData.adaptacaoFator || 1.0)*100)}%</p>
+        </div>
+      </div>
+    `;
     
-    document.getElementById('resendVerificationBtn')?.addEventListener('click', async () => {
-        if (!currentUser) return;
-        try {
-            await sendEmailVerification(currentUser);
-            showNotification('Email de verificação reenviado!', 'success');
-        } catch (e) {
-            showNotification('Erro ao reenviar verificação', 'error');
-            console.error(e);
-        }
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => { await signOut(auth); renderLogin(); });
+    document.getElementById('updateWeightBtn')?.addEventListener('click', () => {
+      let novoPeso = prompt("Atualize seu peso atual (kg):", userData.peso);
+      if (novoPeso) atualizarPeso(novoPeso);
     });
-    
-    document.getElementById('forgotPassLink')?.addEventListener('click', async () => {
-        const email = prompt("Digite seu email");
-        if (email && validateEmail(email)) {
-            showLoading(true, 'Enviando...');
-            try { 
-                await sendPasswordResetEmail(auth, email); 
-                showNotification("Email enviado!", 'success'); 
-            } catch (e) { 
-                showNotification(getFirebaseErrorMessage(e), 'error'); 
-            } finally { 
-                showLoading(false); 
-            }
-        } else if (email) {
-            showNotification('Email inválido', 'error');
-        }
+    if (treinoHoje) {
+      document.getElementById('completeWorkoutBtn')?.addEventListener('click', () => {
+        const feedbackDiv = document.getElementById('feedbackArea');
+        const timerDiv = document.getElementById('timerSection');
+        if (feedbackDiv) feedbackDiv.style.display = 'block';
+        if (timerDiv) timerDiv.style.display = 'block';
+        startTimer();
+        document.getElementById('feedbackFacil')?.addEventListener('click', () => { registrarTreinoConcluido("facil"); });
+        document.getElementById('feedbackMedio')?.addEventListener('click', () => { registrarTreinoConcluido("medio"); });
+        document.getElementById('feedbackDificil')?.addEventListener('click', () => { registrarTreinoConcluido("dificil"); });
+      });
+    }
+    drawWeightChart();
+  }
+  
+  let timerInterval;
+  function startTimer() {
+    let timeLeft = 90;
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (!timerDisplay) return;
+    if (timerInterval) clearInterval(timerInterval);
+    const updateTimer = () => {
+      let minutes = Math.floor(timeLeft / 60);
+      let seconds = timeLeft % 60;
+      timerDisplay.innerText = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+      if (timeLeft <= 0) clearInterval(timerInterval);
+      timeLeft--;
+    };
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 1000);
+    document.getElementById('resetTimerBtn')?.addEventListener('click', () => { timeLeft = 90; updateTimer(); });
+  }
+  
+  function drawWeightChart() {
+    const canvas = document.getElementById('weightChartCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const historico = userData.historicoPeso || [];
+    const labels = historico.slice(-7).map(h => new Date(h.data).toLocaleDateString());
+    const dataPoints = historico.slice(-7).map(h => h.peso);
+    if (weightChart) weightChart.destroy();
+    weightChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ label: 'Peso (kg)', data: dataPoints, borderColor: '#ff5e00', backgroundColor: '#ff5e0020', tension: 0.3, fill: true, pointBackgroundColor: '#ff8c00' }] },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { grid: { color: '#2a2f3f' } } } }
     });
-    
-    document.getElementById('showLoginBtn')?.addEventListener('click', () => {
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        if (loginForm) loginForm.classList.remove('hide');
-        if (signupForm) signupForm.classList.add('hide');
-    });
-    
-    document.getElementById('showSignupBtn')?.addEventListener('click', () => {
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        if (loginForm) loginForm.classList.add('hide');
-        if (signupForm) signupForm.classList.remove('hide');
-    });
-    
-    document.getElementById('logoutBtn')?.addEventListener('click', () => {
-        if (activeTimer) {
-            clearInterval(activeTimer);
-            activeTimer = null;
-        }
-        invalidateCache(); // 🔴 #4: Limpar cache no logout
-        auth.signOut();
-    });
-    
-    // ========== AUTH STATE HANDLER ==========
-    onAuthStateChanged(auth, async (user) => {
-        showLoading(true);
-        try {
-            if (user) {
-                currentUser = user;
-                
-                const isGoogleUser = (user.providerData || []).some(p => p?.providerId === 'google.com');
-                
-                const banner = document.getElementById('emailVerificationBanner');
-                if (!user.emailVerified && !isGoogleUser) {
-                    if (banner) banner.classList.remove('hide');
-                    showNotification("Verifique seu email para acessar todas as funcionalidades!", 'warning');
-                } else {
-                    if (banner) banner.classList.add('hide');
-                }
-                
-                const userRef = doc(db, "users", user.uid);
-                const userSnap = await getDoc(userRef);
-                
-                if (!userSnap.exists()) {
-                    await setDoc(userRef, {
-                        email: user.email,
-                        createdAt: new Date().toISOString(),
-                        streak: 0, totalWorkouts: 0, xp: 0, achievements: []
-                    });
-                }
-                
-                await initializeUserUsername(user.uid, user.email);
-                await loadUserData();
-                
-                if (!isQuizComplete(userData?.quiz)) {
-                    const authScreen = document.getElementById('authScreen');
-                    const mainApp = document.getElementById('mainApp');
-                    const quizModal = document.getElementById('quizModal');
-                    if (authScreen) authScreen.classList.add('hide');
-                    if (mainApp) mainApp.classList.add('hide');
-                    if (quizModal) quizModal.classList.remove('hide');
-                    currentQuizStep = 0;
-                    quizAnswers = {};
-                    renderQuizStep();
-                } else {
-                    const authScreen = document.getElementById('authScreen');
-                    const quizModal = document.getElementById('quizModal');
-                    const mainApp = document.getElementById('mainApp');
-                    if (authScreen) authScreen.classList.add('hide');
-                    if (quizModal) quizModal.classList.add('hide');
-                    if (mainApp) mainApp.classList.remove('hide');
-                    await displayWorkoutOfDay();
-                }
-            } else {
-                const authScreen = document.getElementById('authScreen');
-                const mainApp = document.getElementById('mainApp');
-                const quizModal = document.getElementById('quizModal');
-                const banner = document.getElementById('emailVerificationBanner');
-                if (authScreen) authScreen.classList.remove('hide');
-                if (mainApp) mainApp.classList.add('hide');
-                if (quizModal) quizModal.classList.add('hide');
-                if (banner) banner.classList.add('hide');
-                currentUser = null;
-                userData = null;
-                if (activeTimer) {
-                    clearInterval(activeTimer);
-                    activeTimer = null;
-                }
-            }
-        } catch (error) {
-            console.error('Auth error:', error);
-            showNotification('Erro ao carregar aplicação', 'error');
-        } finally { 
-            showLoading(false); 
-        }
-    });
+  }
+  
+  async function loadDashboard() {
+    if (!currentUser) return;
+    const docRef = doc(db, "usuarios", currentUser.uid);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      userData = snap.data();
+      renderDashboard();
+    } else {
+      renderQuiz();
+    }
+  }
+  
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      const docRef = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        userData = snap.data();
+        renderDashboard();
+      } else {
+        renderQuiz();
+      }
+    } else {
+      currentUser = null;
+      userData = null;
+      renderLogin();
+    }
+  });
 </script>
 </body>
 </html>
